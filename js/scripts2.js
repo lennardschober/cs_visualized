@@ -1789,6 +1789,7 @@ function textHittest(x, y) {
     return 0;
 }
 
+// function to quickly check if a path exists
 function fastBFS(row, col) {
     // Direction vectors
     var dRow = [-1, 0, 1, 0];
