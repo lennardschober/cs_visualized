@@ -29,6 +29,8 @@ let gottaStop = 0;
 let globalObstacle = "wall";
 let changedRow = -1;
 let changedCol = -1;
+let canMove = 0;
+let stopper = 0;
 
 
 /*
@@ -496,7 +498,7 @@ async function drawCell(canvas, x, y) {
     animationGrid[y][x] = 2;
 }
 
-// animate drawing
+// animate drawing the path
 async function drawPathCell(canvas, x, y) {
     // set canvas and ctx
     const ctx = canvas.getContext('2d');
@@ -606,6 +608,7 @@ async function drawPathCell(canvas, x, y) {
     animationGrid[y][x] = 2;
 }
 
+// animate drawing the walls
 async function drawObstacleCell(canvas, x, y) {
     // set canvas and ctx
     const ctx = canvas.getContext('2d');
@@ -662,6 +665,7 @@ async function drawObstacleCell(canvas, x, y) {
     animationGrid[y][x] = 2;
 }
 
+// draws the start symbol
 function drawStart(x, y) {
     // Define the coordinates of the triangle vertices
     var x1 = x * (cellWidth + padding) + padding + cellWidth / 2 - 8;
@@ -681,6 +685,7 @@ function drawStart(x, y) {
     ctx.stroke(); // Draw the stroke
 }
 
+// draws the target symbol
 function drawTarget(x, y) {
     // Radius of the outer circle
     var radius = 10;
@@ -699,6 +704,7 @@ function drawTarget(x, y) {
     ctx.fill();
 }
 
+// draws the weights
 function drawWeight(x, y) {
     // Define parameters for the dumbbell
     var centerX = x * (cellWidth + padding) + padding + cellWidth / 2;
@@ -724,238 +730,7 @@ function drawWeight(x, y) {
     ctx.fillText("5", centerX, centerY + yOffset + 1);
 }
 
-/*
- *
- * ENUM
- *
- */
-const CellState = {
-    EMPTY: 0,
-    OBSTACLE: 1,
-    START: 2,
-    END: 3,
-    VISITED: 4,
-    PATH: 5,
-    WEIGHT: 6
-};
-
-/*
- *
- * INITIALIZATION
- *
- */
-function initializeGrid() {
-    canvas = document.getElementById('pathfindingCanvas');
-    ctx = canvas.getContext('2d');
-
-    // Set canvas size to match viewport
-    tempWidth = window.innerWidth; // Adjust multiplier as needed
-    tempHeight = window.innerHeight - 1.2 * document.getElementById('mainNav').offsetHeight; // Adjust multiplier as needed
-    let numCols = Math.floor((tempWidth - 2 * padding) / (cellWidth + padding) - 0.5);
-    let numRows = Math.floor((tempHeight - 2 * padding) / (cellHeight + padding)) - 1;
-    sRow = Math.floor(numRows / 2);
-    sCol = Math.floor(numCols / 4);
-    tRow = Math.floor(numRows / 2);;
-    tCol = Math.floor(3 * numCols / 4);;
-
-    // set canvas dimensions so that I can center the canvas thus centering the grid
-    canvas.width = numCols * (cellWidth + padding) + padding;
-    canvas.height = numRows * (cellHeight + padding) + padding;
-
-    const grid = [];
-    for (let i = 0; i < numRows; i++) {
-        const row = [];
-        for (let j = 0; j < numCols; j++) {
-            row.push(CellState.EMPTY);
-        }
-        grid.push(row);
-    }
-    grid[sRow][sCol] = CellState.START;
-    grid[tRow][tCol] = CellState.END;
-
-    globalGrid = grid;
-    animationGrid = Array.from({ length: globalGrid.length }, () => Array(globalGrid[0].length).fill(0));
-}
-
-async function generateEmpty() {
-    if (stopper) return;
-    const numRows = globalGrid.length;
-    const numCols = globalGrid[0].length;
-
-    animationGrid.forEach((row, rInd) => {
-        row.forEach((element, cInd) => {
-            animationGrid[rInd][cInd] = 2;
-        });
-    });
-
-    resetCanvas();
-    var elem = document.getElementById("visualizeButton");
-    elem.innerText = "stop!";
-    toggleVisualizeButton();
-    globalGrid = Array.from({ length: numRows }, () => Array(numCols).fill(CellState.EMPTY));
-    weightGrid = Array.from({ length: numRows }, () => Array(numCols).fill(CellState.EMPTY));
-    globalGrid[sRow][sCol] = CellState.START;
-    globalGrid[tRow][tCol] = CellState.END;
-    drawGrid();
-}
-
-// Function to check if a cell
-// is be visited or not
-function isValid(vis, row, col) {
-    // If cell lies out of bounds
-    if (row < 0 || col < 0
-        || row >= globalGrid.length || col >= globalGrid[0].length)
-        return false;
-
-    // If cell is already visited
-    if (vis[row][col])
-        return false;
-
-    // If cell is obstacle
-    if (globalGrid[row][col] == CellState.OBSTACLE)
-        return false;
-
-    // Otherwise
-    return true;
-}
-
-
-/*
- *
- * ALGORITHMS
- *
- */
-// Function to perform the BFS traversal
-async function BFS(row, col) {
-    if (gottaStop) {
-        animationGrid.forEach((row, rInd) => {
-            // Inside the outer forEach, iterate over each element in the row
-            row.forEach((element, cInd) => {
-                animationGrid[rInd][cInd] = 2;
-            });
-        });
-        return;
-    }
-
-    // Direction vectors
-    var dRow = [-1, 0, 1, 0];
-    var dCol = [0, 1, 0, -1];
-
-    // Declare the visited array
-    var vis = Array.from(Array(globalGrid.length), () => Array(globalGrid[0].length).fill(false));
-    var parent = Array.from(Array(globalGrid.length), () => Array(globalGrid[0].length));
-
-    // Stores indices of the matrix cells
-    var q = [];
-
-    // Mark the starting cell as visited
-    // and push it into the queue
-    q.push([row, col]);
-    vis[row][col] = true;
-    globalGrid[row][col] = CellState.VISITED;
-    animationGrid[row][col] = 2;
-    drawGrid();
-    await sleep(globalSpeed * 5);
-    if (gottaStop) {
-        animationGrid.forEach((row, rInd) => {
-            // Inside the outer forEach, iterate over each element in the row
-            row.forEach((element, cInd) => {
-                animationGrid[rInd][cInd] = 2;
-            });
-        });
-        return;
-    }
-    // Iterate while the queue
-    // is not empty
-    while (q.length != 0) {
-        var cell = q[0];
-        var x = cell[0];
-        var y = cell[1];
-
-        q.shift();
-
-        // Go to the adjacent cells
-        for (var i = 0; i < 4; i++) {
-
-            var adjx = x + dRow[i];
-            var adjy = y + dCol[i];
-
-            if (isValid(vis, adjx, adjy)) {
-                q.push([adjx, adjy]);
-                vis[adjx][adjy] = true;
-                parent[adjx][adjy] = [x, y]; // Store the parent of the adjacent cell
-                if (globalGrid[adjx][adjy] == CellState.END) {
-                    globalGrid[adjx][adjy] = CellState.VISITED;
-                    await drawShortestPath(parent, [adjx, adjy]); // Draw the shortest path
-                    return;
-                }
-                globalGrid[adjx][adjy] = CellState.VISITED;
-                drawGrid();
-                await sleep(globalSpeed * 5);
-                if (gottaStop) {
-                    return;
-                }
-            }
-        }
-    }
-
-    await sleep(globalSpeed * 1500);
-    drawTextBG("No path found.", canvas.width / 2, canvas.height / 2, getFont(5, canvas.width) + "px serif");
-    toggleVisualizeButton();
-}
-
-async function DFS(startRow, startCol) {
-    if (gottaStop) return;
-
-    const numRows = globalGrid.length;
-    const numCols = globalGrid[0].length;
-    const visited = new Array(numRows).fill(false).map(() => new Array(numCols).fill(false));
-    var parent = Array.from(Array(globalGrid.length), () => Array(globalGrid[0].length));
-    const stack = [[startRow, startCol]];
-
-    // Define the four directions: up, down, left, right
-    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-
-    // Mark the start cell as visited
-    visited[startRow][startCol] = true;
-    globalGrid[startRow][startCol] = CellState.VISITED;
-    animationGrid[startRow][startCol] = 2;
-    drawGrid();
-    await sleep(globalSpeed * 10);
-    if (gottaStop) return;
-
-    while (stack.length > 0) {
-        const [row, col] = stack.pop();
-        // Explore all neighbors of the current cell
-        for (const [dx, dy] of directions) {
-            const newRow = row + dx;
-            const newCol = col + dy;
-
-            // Check if the new position is within the grid boundaries and not visited
-            if (isValid(visited, newRow, newCol)) {
-                // Mark the neighbor as visited and add it to the stack for further exploration
-                stack.push([newRow, newCol]);
-
-                visited[newRow][newCol] = true;
-                parent[newRow][newCol] = [row, col]; // Store the parent of the adjacent cell
-                if (globalGrid[newRow][newCol] == CellState.END) {
-                    globalGrid[newRow][newCol] = CellState.VISITED;
-                    await drawShortestPath(parent, [newRow, newCol]); // Draw the shortest path
-                    return;
-                }
-                globalGrid[newRow][newCol] = CellState.VISITED;
-                drawGrid();
-                await sleep(globalSpeed * 10);
-                if (gottaStop) return;
-            }
-        }
-    }
-
-    await sleep(globalSpeed * 1500);
-    drawTextBG("No path found.", canvas.width / 2, canvas.height / 2, getFont(5, canvas.width) + "px serif");
-    toggleVisualizeButton();
-}
-
+// animates the found path
 async function drawShortestPath(parent, endCell) {
     let path = []; // Array to store the path cells
     let pathLength = 2;
@@ -1071,18 +846,7 @@ async function drawShortestPath(parent, endCell) {
     }
 }
 
-function usesWeights() {
-    for (let i = 0; i < weightGrid.length; i++) {
-        for (let j = 0; j < weightGrid[i].length; j++) {
-            if (weightGrid[i][j] != 0) {
-                return true; // Found a non-zero element, return false
-            }
-        }
-    }
-    return false; // All elements are zero
-}
-
-/// expand with color, background etc.
+// draws text of visited nodes, path length, ... after computation
 function drawTextBG(txt, x, y, font) {
     /// lets save current state as we make a lot of changes        
     ctx.save();
@@ -1115,13 +879,104 @@ function drawTextBG(txt, x, y, font) {
     ctx.restore();
 }
 
-function fastBFS(row, col) {
+/*
+ *
+ * ENUM
+ *
+ */
+const CellState = {
+    EMPTY: 0,
+    OBSTACLE: 1,
+    START: 2,
+    END: 3,
+    VISITED: 4,
+    PATH: 5,
+    WEIGHT: 6
+};
+
+/*
+ *
+ * INITIALIZATION
+ *
+ */
+function initializeGrid() {
+    canvas = document.getElementById('pathfindingCanvas');
+    ctx = canvas.getContext('2d');
+
+    // Set canvas size to match viewport
+    tempWidth = window.innerWidth; // Adjust multiplier as needed
+    tempHeight = window.innerHeight - 1.2 * document.getElementById('mainNav').offsetHeight; // Adjust multiplier as needed
+    let numCols = Math.floor((tempWidth - 2 * padding) / (cellWidth + padding) - 0.5);
+    let numRows = Math.floor((tempHeight - 2 * padding) / (cellHeight + padding)) - 1;
+    sRow = Math.floor(numRows / 2);
+    sCol = Math.floor(numCols / 4);
+    tRow = Math.floor(numRows / 2);;
+    tCol = Math.floor(3 * numCols / 4);;
+
+    // set canvas dimensions so that I can center the canvas thus centering the grid
+    canvas.width = numCols * (cellWidth + padding) + padding;
+    canvas.height = numRows * (cellHeight + padding) + padding;
+
+    const grid = [];
+    for (let i = 0; i < numRows; i++) {
+        const row = [];
+        for (let j = 0; j < numCols; j++) {
+            row.push(CellState.EMPTY);
+        }
+        grid.push(row);
+    }
+    grid[sRow][sCol] = CellState.START;
+    grid[tRow][tCol] = CellState.END;
+
+    globalGrid = grid;
+    animationGrid = Array.from({ length: globalGrid.length }, () => Array(globalGrid[0].length).fill(0));
+}
+
+// returns if a cell can be visited or not
+function isValid(vis, row, col) {
+    // If cell lies out of bounds
+    if (row < 0 || col < 0
+        || row >= globalGrid.length || col >= globalGrid[0].length)
+        return false;
+
+    // If cell is already visited
+    if (vis[row][col])
+        return false;
+
+    // If cell is obstacle
+    if (globalGrid[row][col] == CellState.OBSTACLE)
+        return false;
+
+    // Otherwise
+    return true;
+}
+
+
+/*
+ *
+ * ALGORITHMS
+ *
+ */
+
+// function to perform BFS
+async function BFS(row, col) {
+    if (gottaStop) {
+        animationGrid.forEach((row, rInd) => {
+            // Inside the outer forEach, iterate over each element in the row
+            row.forEach((element, cInd) => {
+                animationGrid[rInd][cInd] = 2;
+            });
+        });
+        return;
+    }
+
     // Direction vectors
     var dRow = [-1, 0, 1, 0];
     var dCol = [0, 1, 0, -1];
 
     // Declare the visited array
     var vis = Array.from(Array(globalGrid.length), () => Array(globalGrid[0].length).fill(false));
+    var parent = Array.from(Array(globalGrid.length), () => Array(globalGrid[0].length));
 
     // Stores indices of the matrix cells
     var q = [];
@@ -1130,29 +985,165 @@ function fastBFS(row, col) {
     // and push it into the queue
     q.push([row, col]);
     vis[row][col] = true;
-
+    globalGrid[row][col] = CellState.VISITED;
+    animationGrid[row][col] = 2;
+    drawGrid();
+    await sleep(globalSpeed * 5);
+    if (gottaStop) {
+        animationGrid.forEach((row, rInd) => {
+            // Inside the outer forEach, iterate over each element in the row
+            row.forEach((element, cInd) => {
+                animationGrid[rInd][cInd] = 2;
+            });
+        });
+        return;
+    }
     // Iterate while the queue
     // is not empty
     while (q.length != 0) {
         var cell = q[0];
         var x = cell[0];
         var y = cell[1];
+
         q.shift();
 
         // Go to the adjacent cells
         for (var i = 0; i < 4; i++) {
+
             var adjx = x + dRow[i];
             var adjy = y + dCol[i];
+
             if (isValid(vis, adjx, adjy)) {
                 q.push([adjx, adjy]);
                 vis[adjx][adjy] = true;
+                parent[adjx][adjy] = [x, y]; // Store the parent of the adjacent cell
                 if (globalGrid[adjx][adjy] == CellState.END) {
-                    return true;
+                    globalGrid[adjx][adjy] = CellState.VISITED;
+                    await drawShortestPath(parent, [adjx, adjy]); // Draw the shortest path
+                    return;
+                }
+                globalGrid[adjx][adjy] = CellState.VISITED;
+                drawGrid();
+                await sleep(globalSpeed * 5);
+                if (gottaStop) {
+                    return;
                 }
             }
         }
     }
-    return false;
+
+    await sleep(globalSpeed * 1500);
+    drawTextBG("No path found.", canvas.width / 2, canvas.height / 2, getFont(5, canvas.width) + "px serif");
+    toggleVisualizeButton();
+}
+
+// function to perform DFS
+async function DFS(startRow, startCol) {
+    if (gottaStop) return;
+
+    const numRows = globalGrid.length;
+    const numCols = globalGrid[0].length;
+    const visited = new Array(numRows).fill(false).map(() => new Array(numCols).fill(false));
+    var parent = Array.from(Array(globalGrid.length), () => Array(globalGrid[0].length));
+    const stack = [[startRow, startCol]];
+
+    // Define the four directions: up, down, left, right
+    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+    // Mark the start cell as visited
+    visited[startRow][startCol] = true;
+    globalGrid[startRow][startCol] = CellState.VISITED;
+    animationGrid[startRow][startCol] = 2;
+    drawGrid();
+    await sleep(globalSpeed * 10);
+    if (gottaStop) return;
+
+    while (stack.length > 0) {
+        const [row, col] = stack.pop();
+        // Explore all neighbors of the current cell
+        for (const [dx, dy] of directions) {
+            const newRow = row + dx;
+            const newCol = col + dy;
+
+            // Check if the new position is within the grid boundaries and not visited
+            if (isValid(visited, newRow, newCol)) {
+                // Mark the neighbor as visited and add it to the stack for further exploration
+                stack.push([newRow, newCol]);
+
+                visited[newRow][newCol] = true;
+                parent[newRow][newCol] = [row, col]; // Store the parent of the adjacent cell
+                if (globalGrid[newRow][newCol] == CellState.END) {
+                    globalGrid[newRow][newCol] = CellState.VISITED;
+                    await drawShortestPath(parent, [newRow, newCol]); // Draw the shortest path
+                    return;
+                }
+                globalGrid[newRow][newCol] = CellState.VISITED;
+                drawGrid();
+                await sleep(globalSpeed * 10);
+                if (gottaStop) return;
+            }
+        }
+    }
+
+    await sleep(globalSpeed * 1500);
+    drawTextBG("No path found.", canvas.width / 2, canvas.height / 2, getFont(5, canvas.width) + "px serif");
+    toggleVisualizeButton();
+}
+
+// function to perform A* and greedy BFS
+async function ASTAR(startRow, startCol) {
+    const numRows = globalGrid.length;
+    const numCols = globalGrid[0].length;
+
+    const endRow = tRow;
+    const endCol = tCol;
+
+    // Priority queue to store nodes with their f-values
+    const pq = new PriorityQueue({ comparator: (a, b) => a.f - b.f });
+
+    // Initialize distances and parent pointers
+    const distances = Array.from({ length: numRows }, () => Array(numCols).fill(Infinity));
+    const parents = Array.from({ length: numRows }, () => Array(numCols).fill(null));
+
+    // Initialize start node
+    distances[startRow][startCol] = 0;
+    pq.enqueue([startRow, startCol], 0);
+
+    while (!pq.isEmpty()) {
+        const cell = pq.dequeue().element;
+        const currentRow = cell[0];
+        const currentCol = cell[1];
+        globalGrid[currentRow][currentCol] = CellState.VISITED;
+        drawGrid();
+        await sleep(globalSpeed * 5);
+        if (gottaStop) return;
+
+        // Check if we reached the goal
+        if (currentRow == endRow && currentCol == endCol) {
+            await getPath(parents, currentRow, currentCol);
+            return;
+        }
+
+        const neighbors = getNeighbors(currentRow, currentCol, numRows, numCols);
+        for (const neighbor of neighbors) {
+            const { row, col } = neighbor;
+            let newDistance = 0
+            if (globalAlgo != "greedyBestFirst") {
+                newDistance = (weightGrid && weightGrid[row][col] == CellState.WEIGHT) ? distances[currentRow][currentCol] + 5 : distances[currentRow][currentCol] + 1;
+            }
+            if (newDistance < distances[row][col]) {
+                distances[row][col] = newDistance;
+                parents[row][col] = { row: currentRow, col: currentCol };
+                const f = newDistance + heuristic(row, col, endRow, endCol);
+                pq.enqueue([row, col], f);
+            }
+            if (gottaStop) return;
+        }
+    }
+
+    await sleep(globalSpeed * 1500);
+    drawTextBG("No path found.", canvas.width / 2, canvas.height / 2, getFont(5, canvas.width) + "px serif");
+    toggleVisualizeButton();
 }
 
 /*
@@ -1160,6 +1151,31 @@ function fastBFS(row, col) {
  * GRID GENERATION
  *
  */
+
+// generates an empty grid
+async function generateEmpty() {
+    if (stopper) return;
+    const numRows = globalGrid.length;
+    const numCols = globalGrid[0].length;
+
+    animationGrid.forEach((row, rInd) => {
+        row.forEach((element, cInd) => {
+            animationGrid[rInd][cInd] = 2;
+        });
+    });
+
+    resetCanvas();
+    var elem = document.getElementById("visualizeButton");
+    elem.innerText = "stop!";
+    toggleVisualizeButton();
+    globalGrid = Array.from({ length: numRows }, () => Array(numCols).fill(CellState.EMPTY));
+    weightGrid = Array.from({ length: numRows }, () => Array(numCols).fill(CellState.EMPTY));
+    globalGrid[sRow][sCol] = CellState.START;
+    globalGrid[tRow][tCol] = CellState.END;
+    drawGrid();
+}
+
+// generates a grid with random walls
 async function generateRandom() {
     resetCanvas();
     if (stopper) return;
@@ -1201,6 +1217,7 @@ async function generateRandom() {
     drawGrid();
 }
 
+// generates a grid with random weights
 async function generateRandomWeights() {
     resetCanvas();
     if (stopper) return;
@@ -1244,6 +1261,7 @@ async function generateRandomWeights() {
     drawGrid();
 }
 
+// generates a grid with random walls and weights
 async function generateRandomObstaclesWeights() {
     resetCanvas();
     if (stopper) return;
@@ -1286,13 +1304,7 @@ async function generateRandomObstaclesWeights() {
     drawGrid();
 }
 
-// Define a function for deep copying arrays
-function deepCopyArray(arr) {
-    return arr.map(item => Array.isArray(item) ? deepCopyArray(item) : item);
-}
-
-// Function to generate a maze using recursive division algorithm
-let stopper = 0;
+// function to generate a maze using recursive division algorithm
 // 1 = horizontal bias
 // -1 = vertical bias
 // 0 = no bias
@@ -1321,74 +1333,6 @@ async function generateRecursive(bias) {
     drawGrid();
     await sleep(800);
     stopper = 0;
-}
-
-// Recursive function to divide the maze
-async function divide(startX, startY, endX, endY, horizontal, bias) {
-    if (endX - startX < 2 || endY - startY < 2) {
-        return; // Base case: corridor is too small to divide further
-    }
-
-    // Make a gap in the wall
-    let diffX = endX - startX;
-    let diffY = endY - startY;
-    let tempX = Math.floor(Math.random() * (diffX / 5 + 1) + 2 * diffX / 5) + startX;
-    let tempY = Math.floor(Math.random() * (diffY / 5 + 1) + 2 * diffY / 5) + startY;
-    let wallX = 0;
-    let wallY = 0;
-    if (horizontal) {
-        wallX = tempX % 2 == 0 ? tempX : tempX + 1;
-        wallY = tempY % 2 == 0 ? tempY + 1 : tempY;
-    }
-    else {
-        wallX = tempX % 2 == 0 ? tempX + 1 : tempX;
-        wallY = tempY % 2 == 0 ? tempY : tempY + 1;
-    }
-    // Create the wall
-    for (let i = startX; i <= endX; i++) {
-        for (let j = startY; j <= endY; j++) {
-            if (globalGrid[i][j] == CellState.START || globalGrid[i][j] == CellState.END) continue;
-            if (horizontal) {
-                if (j == wallY && i != wallX) {
-                    globalGrid[i][j] = CellState.OBSTACLE;
-                    drawGrid();
-                    await sleep(globalSpeed * 2);
-                }
-                else if (j == wallY && i == wallX) globalGrid[i][j] = CellState.EMPTY;
-            }
-            else {
-                if (i == wallX && j != wallY) {
-                    globalGrid[i][j] = CellState.OBSTACLE;
-                    drawGrid();
-                    await sleep(globalSpeed * 2);
-                }
-                else if (i == wallX && j == wallY) globalGrid[i][j] = CellState.EMPTY;
-            }
-        }
-    }
-
-    // Recursively divide the sub-mazes
-    if (horizontal) {
-        if (bias == -1) {
-            horizontal = Math.random() < 0.3;
-        }
-        else if (bias == 1) {
-            horizontal = Math.random() < 0.7;
-        }
-
-        await divide(startX, startY, endX, wallY - 1, !horizontal, bias); // Upper sub-maze
-        await divide(startX, wallY + 1, endX, endY, !horizontal, bias); // Lower sub-maze
-    } else {
-        if (bias == -1) {
-            horizontal = Math.random() < 0.3;
-        }
-        else if (bias == 1) {
-            horizontal = Math.random() < 0.7;
-        }
-
-        await divide(startX, startY, wallX - 1, endY, !horizontal, bias); // Left sub-maze
-        await divide(wallX + 1, startY, endX, endY, !horizontal, bias); // Right sub-maze
-    }
 }
 
 /*
@@ -1459,6 +1403,13 @@ class PriorityQueue {
     }
 }
 
+/*
+ *
+ * HELPER FUNCTIONS
+ *
+ */
+
+// returns the heuristic value for A* and greedy BFS
 function heuristic(row, col, goalRow, goalCol) {
     // Manhattan distance heuristic
     if (globalAlgo == "dijkstra") return 0;
@@ -1469,66 +1420,78 @@ function heuristic(row, col, goalRow, goalCol) {
     return (aStarHeuristic == "manhattan") ? Math.abs(row - goalRow) + Math.abs(col - goalCol) : Math.hypot(Math.abs(row - goalRow), Math.abs(col - goalCol));
 }
 
-async function ASTAR(startRow, startCol) {
-    const numRows = globalGrid.length;
-    const numCols = globalGrid[0].length;
+// Recursive function to divide the maze
+async function divide(startX, startY, endX, endY, horizontal, bias) {
+    if (endX - startX < 2 || endY - startY < 2) {
+        return; // Base case: corridor is too small to divide further
+    }
 
-    const endRow = tRow;
-    const endCol = tCol;
-
-    // Priority queue to store nodes with their f-values
-    const pq = new PriorityQueue({ comparator: (a, b) => a.f - b.f });
-
-    // Initialize distances and parent pointers
-    const distances = Array.from({ length: numRows }, () => Array(numCols).fill(Infinity));
-    const parents = Array.from({ length: numRows }, () => Array(numCols).fill(null));
-
-    // Initialize start node
-    distances[startRow][startCol] = 0;
-    pq.enqueue([startRow, startCol], 0);
-
-    while (!pq.isEmpty()) {
-        const cell = pq.dequeue().element;
-        const currentRow = cell[0];
-        const currentCol = cell[1];
-        globalGrid[currentRow][currentCol] = CellState.VISITED;
-        drawGrid();
-        await sleep(globalSpeed * 5);
-        if (gottaStop) return;
-
-        // Check if we reached the goal
-        if (currentRow == endRow && currentCol == endCol) {
-            await getPath(parents, currentRow, currentCol);
-            return;
-        }
-
-        const neighbors = getNeighbors(currentRow, currentCol, numRows, numCols);
-        for (const neighbor of neighbors) {
-            const { row, col } = neighbor;
-            let newDistance = 0
-            if (globalAlgo != "greedyBestFirst") {
-                newDistance = (weightGrid && weightGrid[row][col] == CellState.WEIGHT) ? distances[currentRow][currentCol] + 5 : distances[currentRow][currentCol] + 1;
+    // Make a gap in the wall
+    let diffX = endX - startX;
+    let diffY = endY - startY;
+    let tempX = Math.floor(Math.random() * (diffX / 5 + 1) + 2 * diffX / 5) + startX;
+    let tempY = Math.floor(Math.random() * (diffY / 5 + 1) + 2 * diffY / 5) + startY;
+    let wallX = 0;
+    let wallY = 0;
+    if (horizontal) {
+        wallX = tempX % 2 == 0 ? tempX : tempX + 1;
+        wallY = tempY % 2 == 0 ? tempY + 1 : tempY;
+    }
+    else {
+        wallX = tempX % 2 == 0 ? tempX + 1 : tempX;
+        wallY = tempY % 2 == 0 ? tempY : tempY + 1;
+    }
+    // Create the wall
+    for (let i = startX; i <= endX; i++) {
+        for (let j = startY; j <= endY; j++) {
+            if (globalGrid[i][j] == CellState.START || globalGrid[i][j] == CellState.END) continue;
+            if (horizontal) {
+                if (j == wallY && i != wallX) {
+                    globalGrid[i][j] = CellState.OBSTACLE;
+                    drawGrid();
+                    await sleep(globalSpeed * 2);
+                }
+                else if (j == wallY && i == wallX) globalGrid[i][j] = CellState.EMPTY;
             }
-            if (newDistance < distances[row][col]) {
-                distances[row][col] = newDistance;
-                parents[row][col] = { row: currentRow, col: currentCol };
-                const f = newDistance + heuristic(row, col, endRow, endCol);
-                pq.enqueue([row, col], f);
+            else {
+                if (i == wallX && j != wallY) {
+                    globalGrid[i][j] = CellState.OBSTACLE;
+                    drawGrid();
+                    await sleep(globalSpeed * 2);
+                }
+                else if (i == wallX && j == wallY) globalGrid[i][j] = CellState.EMPTY;
             }
-            if (gottaStop) return;
         }
     }
 
-    await sleep(globalSpeed * 1500);
-    drawTextBG("No path found.", canvas.width / 2, canvas.height / 2, getFont(5, canvas.width) + "px serif");
-    toggleVisualizeButton();
+    // Recursively divide the sub-mazes
+    if (horizontal) {
+        if (bias == -1) {
+            horizontal = Math.random() < 0.3;
+        }
+        else if (bias == 1) {
+            horizontal = Math.random() < 0.7;
+        }
+
+        await divide(startX, startY, endX, wallY - 1, !horizontal, bias); // Upper sub-maze
+        await divide(startX, wallY + 1, endX, endY, !horizontal, bias); // Lower sub-maze
+    } else {
+        if (bias == -1) {
+            horizontal = Math.random() < 0.3;
+        }
+        else if (bias == 1) {
+            horizontal = Math.random() < 0.7;
+        }
+
+        await divide(startX, startY, wallX - 1, endY, !horizontal, bias); // Left sub-maze
+        await divide(wallX + 1, startY, endX, endY, !horizontal, bias); // Right sub-maze
+    }
 }
 
-/*
- *
- * HELPER FUNCTIONS
- *
- */
+// deeply copies arr
+function deepCopyArray(arr) {
+    return arr.map(item => Array.isArray(item) ? deepCopyArray(item) : item);
+}
 
 // takes ms time
 function sleep(ms) {
@@ -1574,6 +1537,18 @@ async function getPath(parents, endRow, endCol) {
 // Function to generate a random number within a range
 function randomRange(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// returns whether or not there are any weights on the grid
+function usesWeights() {
+    for (let i = 0; i < weightGrid.length; i++) {
+        for (let j = 0; j < weightGrid[i].length; j++) {
+            if (weightGrid[i][j] != 0) {
+                return true; // Found a non-zero element, return false
+            }
+        }
+    }
+    return false; // All elements are zero
 }
 
 // called when pressing visualization button, calls correct algorithm
@@ -1626,7 +1601,46 @@ function textHittest(x, y) {
     return 0;
 }
 
-let canMove = 0;
+function fastBFS(row, col) {
+    // Direction vectors
+    var dRow = [-1, 0, 1, 0];
+    var dCol = [0, 1, 0, -1];
+
+    // Declare the visited array
+    var vis = Array.from(Array(globalGrid.length), () => Array(globalGrid[0].length).fill(false));
+
+    // Stores indices of the matrix cells
+    var q = [];
+
+    // Mark the starting cell as visited
+    // and push it into the queue
+    q.push([row, col]);
+    vis[row][col] = true;
+
+    // Iterate while the queue
+    // is not empty
+    while (q.length != 0) {
+        var cell = q[0];
+        var x = cell[0];
+        var y = cell[1];
+        q.shift();
+
+        // Go to the adjacent cells
+        for (var i = 0; i < 4; i++) {
+            var adjx = x + dRow[i];
+            var adjy = y + dCol[i];
+            if (isValid(vis, adjx, adjy)) {
+                q.push([adjx, adjy]);
+                vis[adjx][adjy] = true;
+                if (globalGrid[adjx][adjy] == CellState.END) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 // handle mousedown events
 // iterate through texts[] and see if the user
 // mousedown'ed on one of them
