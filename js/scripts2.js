@@ -33,10 +33,14 @@ let changedCol = -1;
 
 /*
  *
- * EVENTS
+ * EVENT LISTENERS
  *
  */
+
+// called when first loading the page
 window.addEventListener('DOMContentLoaded', event => {
+    initializeGrid();
+    drawGrid();
     // Function to set active navbar item
     var setActiveNavItem = function (navItemSelector) {
         const navbarLinks = document.querySelectorAll('.nav-link');
@@ -100,8 +104,10 @@ window.addEventListener('DOMContentLoaded', event => {
     updateWindow();
 });
 
+// called when resizing the window, calls updateWindow
 window.addEventListener('resize', updateWindow);
 
+// adjusts the cell size depending on the updated window size
 function updateWindow() {
     // Set canvas size to match viewport
     tempWidth = window.innerWidth; // Adjust multiplier as needed
@@ -141,7 +147,7 @@ function setActiveNavItem(navItemId) {
     });
 }
 
-// Add event listener to the dropdown items
+// event listener for the dropdown items
 document.querySelectorAll('.dropdown-item').forEach(item => {
     item.addEventListener('click', function () {
         const selectedFunction = this.getAttribute('data-value');
@@ -220,6 +226,13 @@ document.querySelectorAll('.dropdown-item').forEach(item => {
     });
 });
 
+/*
+ *
+ * TOGGLES
+ *
+ */
+
+// toggles the visualization button to be on or off
 function toggleVisualizeButton() {
     var elem = document.getElementById("visualizeButton");
 
@@ -240,6 +253,7 @@ function toggleVisualizeButton() {
     }
 }
 
+// toggles the speed button to be fast or slow
 function toggleSpeedButton() {
     var elem = document.getElementById("speedButton");
     if (elem.innerText == "fast") {
@@ -254,6 +268,7 @@ function toggleSpeedButton() {
     }
 }
 
+// toggles the obstacle button to draw walls or weights
 function toggleObstacleButton() {
     var elem = document.getElementById("obstacleButton");
     if (elem.innerText == "wall") {
@@ -268,21 +283,39 @@ function toggleObstacleButton() {
     }
 }
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function getFont(fontSize, width) {
-    var ratio = fontSize / 150;   // calc ratio
-    var size = width * ratio;   // get font size based on current width
-    return (size | 0); // set font
-}
-
 /*
  *
  * DRAWING
  *
  */
+
+// resets the canvas
+function resetCanvas() {
+    var elem = document.getElementById("visualizeButton");
+    if (elem.innerText != "stop!") {
+        return;
+    }
+    // Iterate over each row in the 2D array
+    globalGrid.forEach((row, rInd) => {
+        // Inside the outer forEach, iterate over each element in the row
+        row.forEach((element, cInd) => {
+            if (element == CellState.VISITED || element == CellState.PATH) globalGrid[rInd][cInd] = CellState.EMPTY;
+        });
+    });
+    animationGrid.forEach((row, rInd) => {
+        // Inside the outer forEach, iterate over each element in the row
+        row.forEach((element, cInd) => {
+            if (globalGrid[rInd][cInd] != CellState.OBSTACLE) animationGrid[rInd][cInd] = 0;
+        });
+    });
+    globalGrid[sRow][sCol] = CellState.START;
+    globalGrid[tRow][tCol] = CellState.END;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    printedW = 0;
+    drawGrid();
+}
+
+// draws globalGrid
 async function drawGrid() {
     // Clear the canvas
     ctx.textAlign = 'center';
@@ -1122,31 +1155,6 @@ function fastBFS(row, col) {
     return false;
 }
 
-function resetCanvas() {
-    var elem = document.getElementById("visualizeButton");
-    if (elem.innerText == "stop!") {
-        return;
-    }
-
-    // Iterate over each row in the 2D array
-    globalGrid.forEach((row, rInd) => {
-        // Inside the outer forEach, iterate over each element in the row
-        row.forEach((element, cInd) => {
-            if (element == CellState.VISITED || element == CellState.PATH) globalGrid[rInd][cInd] = CellState.EMPTY;
-        });
-    });
-    animationGrid.forEach((row, rInd) => {
-        // Inside the outer forEach, iterate over each element in the row
-        row.forEach((element, cInd) => {
-            if (globalGrid[rInd][cInd] != CellState.OBSTACLE) animationGrid[rInd][cInd] = 0;
-        });
-    });
-    globalGrid[sRow][sCol] = CellState.START;
-    globalGrid[tRow][tCol] = CellState.END;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    printedW = 0;
-}
-
 /*
  *
  * GRID GENERATION
@@ -1521,6 +1529,20 @@ async function ASTAR(startRow, startCol) {
  * HELPER FUNCTIONS
  *
  */
+
+// takes ms time
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// returns the correct font size depending on canvas width
+function getFont(fontSize, width) {
+    var ratio = fontSize / 150;   // calc ratio
+    var size = width * ratio;   // get font size based on current width
+    return (size | 0); // set font
+}
+
+// returns all valid neighbors in the grid
 function getNeighbors(row, col, numRows, numCols) {
     const neighbors = [];
     if (row > 0 && globalGrid[row - 1][col] !== CellState.OBSTACLE) neighbors.push({ row: row - 1, col });
@@ -1530,6 +1552,7 @@ function getNeighbors(row, col, numRows, numCols) {
     return neighbors;
 }
 
+// computes the path based on parents
 async function getPath(parents, endRow, endCol) {
     const path = [];
     const temp = []
@@ -1553,6 +1576,7 @@ function randomRange(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+// called when pressing visualization button, calls correct algorithm
 function visualizeAlgos() {
     switch (globalAlgo) {
         case "bfs":
@@ -1574,10 +1598,6 @@ function visualizeAlgos() {
             break;
     }
 }
-
-
-initializeGrid();
-drawGrid();
 
 // get the offset of the canvas relative to the document
 function getOffset() {
