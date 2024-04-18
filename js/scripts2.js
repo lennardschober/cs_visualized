@@ -19,7 +19,8 @@ let cellWidth = 25;
 let cellHeight = 25;
 const padding = 1;
 let sRow, sCol, tRow, tCol = 0;
-let canvas, ctx;
+let canvas = document.getElementById('pathfindingCanvas');
+let ctx = canvas.getContext('2d');
 let globalSpeed = 1;
 let globalAlgo = 0;
 let visBtnText = "choose algo";
@@ -31,6 +32,8 @@ let changedRow = -1;
 let changedCol = -1;
 let canMove = 0;
 let stopper = 0;
+let startX = -1;
+let startY = -1;
 
 
 /*
@@ -227,6 +230,218 @@ document.querySelectorAll('.dropdown-item').forEach(item => {
         }
     });
 });
+
+// handle mousedown events
+// iterate through texts[] and see if the user
+// mousedown'ed on one of them
+// If yes, set the selectedText to the index of that text
+// Add the event listeners for mousedown, mousemove, and mouseup
+canvas.addEventListener("mousedown", (e) => {
+    var elem = document.getElementById("visualizeButton");
+    if (elem.innerText == "stop!") toggleVisualizeButton();
+
+    if (!weightGrid) {
+        weightGrid = Array.from({ length: globalGrid.length }, () => Array(globalGrid[0].length).fill(CellState.EMPTY));
+    }
+
+    startX = getMousePos(e).x;
+    startY = getMousePos(e).y;
+    // Put your mousedown stuff here
+    if (textHittest(startX, startY) == "start") {
+        canMove = 1;
+    }
+    else if (textHittest(startX, startY) == "end") {
+        canMove = 2;
+    }
+    else {
+        canMove = 3;
+        mouseX = getMousePos(e).x;
+        mouseY = getMousePos(e).y;
+        for (var row = 0; row < globalGrid.length; row++) {
+            for (var col = 0; col < globalGrid[0].length; col++) {
+                if (mouseX >= col * (cellWidth + padding) + padding && mouseX <= col * (cellWidth + padding) + padding + cellWidth &&
+                    mouseY >= row * (cellWidth + padding) + padding && mouseY <= row * (cellWidth + padding) + padding + cellWidth) {
+                    switch (globalGrid[row][col]) {
+                        case CellState.OBSTACLE:
+                            if (changedCol == col && changedRow == row) continue;
+                            if (globalObstacle == "wall") {
+                                globalGrid[row][col] = CellState.EMPTY;
+                                weightGrid[row][col] = CellState.EMPTY;
+                            }
+                            else {
+                                globalGrid[row][col] = CellState.WEIGHT;
+                                weightGrid[row][col] = CellState.WEIGHT;
+                            }
+                            changedRow = row;
+                            changedCol = col;
+                            break;
+                        case CellState.WEIGHT:
+                            if (changedCol == col && changedRow == row) continue;
+                            if (globalObstacle == "wall") {
+                                globalGrid[row][col] = CellState.OBSTACLE;
+                                animationGrid[row][col] = 2;
+                                weightGrid[row][col] = CellState.EMPTY;
+                            }
+                            else {
+                                globalGrid[row][col] = CellState.EMPTY;
+                                weightGrid[row][col] = CellState.EMPTY;
+                            }
+                            changedRow = row;
+                            changedCol = col;
+                            break;
+                        case CellState.EMPTY:
+                            if (changedCol == col && changedRow == row) continue;
+                            if (globalObstacle == "wall") {
+                                globalGrid[row][col] = CellState.OBSTACLE;
+                                animationGrid[row][col] = 2;
+                                weightGrid[row][col] = CellState.EMPTY;
+                            }
+                            else {
+                                globalGrid[row][col] = CellState.WEIGHT;
+                                weightGrid[row][col] = CellState.WEIGHT;
+                            }
+                            changedRow = row;
+                            changedCol = col;
+                            break;
+                        default:
+                            // do nothing
+                            break;
+                    }
+                    resetCanvas();
+                    drawGrid();
+                }
+            }
+        }
+    }
+});
+
+// handle mousemove events
+window.addEventListener("mousemove", (e) => {
+    if (!canMove) return;
+
+    mouseX = getMousePos(e).x;
+    mouseY = getMousePos(e).y;
+
+    if (canMove == 1) {
+        for (var row = 0; row < globalGrid.length; row++) {
+            for (var col = 0; col < globalGrid[0].length; col++) {
+                if (mouseX >= col * (cellWidth + padding) + padding && mouseX <= col * (cellWidth + padding) + padding + cellWidth &&
+                    mouseY >= row * (cellWidth + padding) + padding && mouseY <= row * (cellWidth + padding) + padding + cellWidth) {
+                    // prevent overwriting of walls / weights / end
+                    if (globalGrid[row][col] != CellState.EMPTY && globalGrid[row][col] != CellState.START) continue;
+                    sRow = row;
+                    sCol = col;
+                    globalGrid[row][col] = CellState.EMPTY;
+                    resetCanvas();
+                    drawGrid();
+                }
+            }
+        }
+    }
+    else if (canMove == 2) {
+        for (var row = 0; row < globalGrid.length; row++) {
+            for (var col = 0; col < globalGrid[0].length; col++) {
+                if (mouseX >= col * (cellWidth + padding) + padding && mouseX <= col * (cellWidth + padding) + padding + cellWidth &&
+                    mouseY >= row * (cellWidth + padding) + padding && mouseY <= row * (cellWidth + padding) + padding + cellWidth) {
+                    // prevent overwriting of walls / weights / start
+                    if (globalGrid[row][col] != CellState.EMPTY && globalGrid[row][col] != CellState.END) continue;
+                    tRow = row;
+                    tCol = col;
+                    globalGrid[row][col] = CellState.EMPTY;
+                    resetCanvas();
+                    drawGrid();
+                }
+            }
+        }
+    }
+    else if (canMove == 3) {
+        for (var row = 0; row < globalGrid.length; row++) {
+            for (var col = 0; col < globalGrid[0].length; col++) {
+                if (mouseX >= col * (cellWidth + padding) + padding && mouseX <= col * (cellWidth + padding) + padding + cellWidth &&
+                    mouseY >= row * (cellWidth + padding) + padding && mouseY <= row * (cellWidth + padding) + padding + cellWidth) {
+                    switch (globalGrid[row][col]) {
+                        case CellState.OBSTACLE:
+                            if (changedCol == col && changedRow == row) continue;
+                            if (globalObstacle == "wall") {
+                                globalGrid[row][col] = CellState.EMPTY;
+                                weightGrid[row][col] = CellState.EMPTY;
+                            }
+                            else {
+                                globalGrid[row][col] = CellState.WEIGHT;
+                                weightGrid[row][col] = CellState.WEIGHT;
+                            }
+                            changedRow = row;
+                            changedCol = col;
+                            break;
+                        case CellState.WEIGHT:
+                            if (changedCol == col && changedRow == row) continue;
+                            if (globalObstacle == "wall") {
+                                globalGrid[row][col] = CellState.OBSTACLE;
+                                animationGrid[row][col] = 2;
+                                weightGrid[row][col] = 0;
+                            }
+                            else {
+                                globalGrid[row][col] = CellState.EMPTY;
+                                weightGrid[row][col] = 0;
+                            }
+                            changedRow = row;
+                            changedCol = col;
+                            break;
+                        case CellState.EMPTY:
+                            if (changedCol == col && changedRow == row) continue;
+                            if (globalObstacle == "wall") {
+                                globalGrid[row][col] = CellState.OBSTACLE;
+                                animationGrid[row][col] = 2;
+                                weightGrid[row][col] = CellState.EMPTY;
+                            }
+                            else {
+                                globalGrid[row][col] = CellState.WEIGHT;
+                                weightGrid[row][col] = CellState.WEIGHT;
+                            }
+                            changedRow = row;
+                            changedCol = col;
+                            break;
+                        default:
+                            // do nothing
+                            break;
+                    }
+                    resetCanvas();
+                    drawGrid();
+                }
+            }
+        }
+    }
+});
+
+// handle mouseup events
+window.addEventListener("mouseup", (e) => {
+    mouseX = getMousePos(e).x;
+    mouseY = getMousePos(e).y;
+    canMove = 0;
+    changedRow = -1;
+    changedCol = -1;
+
+    // reset all cells where start or end were
+    for (var row = 0; row < globalGrid.length; row++) {
+        for (var col = 0; col < globalGrid[0].length; col++) {
+            if (globalGrid[row][col] == CellState.START || globalGrid[row][col] == CellState.END) {
+                globalGrid[row][col] = CellState.EMPTY;
+            }
+        }
+    }
+
+    //globalGrid[sRow][sCol] = CellState.START;
+    //globalGrid[tRow][tCol] = CellState.END;
+    if (weightGrid) {
+        weightGrid[sRow][sCol] = CellState.EMPTY;
+        weightGrid[tRow][tCol] = CellState.EMPTY;
+    }
+    ctx.clearRect(sCol * (cellWidth + padding), sRow * (cellHeight + padding), cellWidth + 2 * padding, cellHeight + 2 * padding);
+    ctx.clearRect(tCol * (cellWidth + padding), tRow * (cellHeight + padding), cellWidth + 2 * padding, cellHeight + 2 * padding);
+    resetCanvas();
+    drawGrid();
+});
+
 
 /*
  *
@@ -896,9 +1111,6 @@ const CellState = {
  *
  */
 function initializeGrid() {
-    canvas = document.getElementById('pathfindingCanvas');
-    ctx = canvas.getContext('2d');
-
     // Set canvas size to match viewport
     tempWidth = window.innerWidth; // Adjust multiplier as needed
     tempHeight = window.innerHeight - 1.2 * document.getElementById('mainNav').offsetHeight; // Adjust multiplier as needed
@@ -1555,19 +1767,14 @@ function visualizeAlgos() {
     }
 }
 
-// get the offset of the canvas relative to the document
-function getOffset() {
-    var bounds = canvas.getBoundingClientRect();
+// get mouse position on canvas
+function getMousePos(evt) {
+    var rect = canvas.getBoundingClientRect();
     return {
-        x: bounds.left + window.scrollX,
-        y: bounds.top + window.scrollY,
+        x: (evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width,
+        y: (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
     };
 }
-
-var offsetX = getOffset().x;
-var offsetY = getOffset().y;
-var startX = 0;
-var startY = 0;
 
 // test if x,y is inside the bounding box of texts[textIndex]
 function textHittest(x, y) {
@@ -1622,215 +1829,3 @@ function fastBFS(row, col) {
     return false;
 }
 
-// handle mousedown events
-// iterate through texts[] and see if the user
-// mousedown'ed on one of them
-// If yes, set the selectedText to the index of that text
-// Add the event listeners for mousedown, mousemove, and mouseup
-canvas.addEventListener("mousedown", (e) => {
-    var elem = document.getElementById("visualizeButton");
-    console.log("brr1");
-    if (elem.innerText == "stop!") toggleVisualizeButton();
-    console.log("brr2");
-
-    if (!weightGrid) {
-        weightGrid = Array.from({ length: globalGrid.length }, () => Array(globalGrid[0].length).fill(CellState.EMPTY));
-    }
-
-    startX = parseInt(e.clientX - offsetX);
-    startY = parseInt(e.clientY - offsetY);
-
-    // Put your mousedown stuff here
-    if (textHittest(startX, startY) == "start") {
-        canMove = 1;
-        console.log("brr3");
-    }
-    else if (textHittest(startX, startY) == "end") {
-        canMove = 2;
-    }
-    else {
-        canMove = 3;
-        mouseX = parseInt(e.clientX - offsetX);
-        mouseY = parseInt(e.clientY - offsetY);
-        for (var row = 0; row < globalGrid.length; row++) {
-            for (var col = 0; col < globalGrid[0].length; col++) {
-                if (mouseX >= col * (cellWidth + padding) + padding && mouseX <= col * (cellWidth + padding) + padding + cellWidth &&
-                    mouseY >= row * (cellWidth + padding) + padding && mouseY <= row * (cellWidth + padding) + padding + cellWidth) {
-                    switch (globalGrid[row][col]) {
-                        case CellState.OBSTACLE:
-                            if (changedCol == col && changedRow == row) continue;
-                            if (globalObstacle == "wall") {
-                                globalGrid[row][col] = CellState.EMPTY;
-                                weightGrid[row][col] = CellState.EMPTY;
-                            }
-                            else {
-                                globalGrid[row][col] = CellState.WEIGHT;
-                                weightGrid[row][col] = CellState.WEIGHT;
-                            }
-                            changedRow = row;
-                            changedCol = col;
-                            break;
-                        case CellState.WEIGHT:
-                            if (changedCol == col && changedRow == row) continue;
-                            if (globalObstacle == "wall") {
-                                globalGrid[row][col] = CellState.OBSTACLE;
-                                animationGrid[row][col] = 2;
-                                weightGrid[row][col] = CellState.EMPTY;
-                            }
-                            else {
-                                globalGrid[row][col] = CellState.EMPTY;
-                                weightGrid[row][col] = CellState.EMPTY;
-                            }
-                            changedRow = row;
-                            changedCol = col;
-                            break;
-                        case CellState.EMPTY:
-                            if (changedCol == col && changedRow == row) continue;
-                            if (globalObstacle == "wall") {
-                                globalGrid[row][col] = CellState.OBSTACLE;
-                                animationGrid[row][col] = 2;
-                                weightGrid[row][col] = CellState.EMPTY;
-                            }
-                            else {
-                                globalGrid[row][col] = CellState.WEIGHT;
-                                weightGrid[row][col] = CellState.WEIGHT;
-                            }
-                            changedRow = row;
-                            changedCol = col;
-                            break;
-                        default:
-                            // do nothing
-                            break;
-                    }
-                    resetCanvas();
-                    drawGrid();
-                }
-            }
-        }
-    }
-});
-
-window.addEventListener("mousemove", (e) => {
-    if (!canMove) return;
-
-    mouseX = parseInt(e.clientX - offsetX);
-    mouseY = parseInt(e.clientY - offsetY);
-
-    if (canMove == 1) {
-        for (var row = 0; row < globalGrid.length; row++) {
-            for (var col = 0; col < globalGrid[0].length; col++) {
-                if (mouseX >= col * (cellWidth + padding) + padding && mouseX <= col * (cellWidth + padding) + padding + cellWidth &&
-                    mouseY >= row * (cellWidth + padding) + padding && mouseY <= row * (cellWidth + padding) + padding + cellWidth) {
-                    // prevent overwriting of walls / weights / end
-                    if (globalGrid[row][col] != CellState.EMPTY && globalGrid[row][col] != CellState.START) continue;
-                    sRow = row;
-                    sCol = col;
-                    globalGrid[row][col] = CellState.EMPTY;
-                    resetCanvas();
-                    drawGrid();
-                }
-            }
-        }
-    }
-    else if (canMove == 2) {
-        for (var row = 0; row < globalGrid.length; row++) {
-            for (var col = 0; col < globalGrid[0].length; col++) {
-                if (mouseX >= col * (cellWidth + padding) + padding && mouseX <= col * (cellWidth + padding) + padding + cellWidth &&
-                    mouseY >= row * (cellWidth + padding) + padding && mouseY <= row * (cellWidth + padding) + padding + cellWidth) {
-                    // prevent overwriting of walls / weights / start
-                    if (globalGrid[row][col] != CellState.EMPTY && globalGrid[row][col] != CellState.END) continue;
-                    tRow = row;
-                    tCol = col;
-                    globalGrid[row][col] = CellState.EMPTY;
-                    resetCanvas();
-                    drawGrid();
-                }
-            }
-        }
-    }
-    else if (canMove == 3) {
-        for (var row = 0; row < globalGrid.length; row++) {
-            for (var col = 0; col < globalGrid[0].length; col++) {
-                if (mouseX >= col * (cellWidth + padding) + padding && mouseX <= col * (cellWidth + padding) + padding + cellWidth &&
-                    mouseY >= row * (cellWidth + padding) + padding && mouseY <= row * (cellWidth + padding) + padding + cellWidth) {
-                    switch (globalGrid[row][col]) {
-                        case CellState.OBSTACLE:
-                            if (changedCol == col && changedRow == row) continue;
-                            if (globalObstacle == "wall") {
-                                globalGrid[row][col] = CellState.EMPTY;
-                                weightGrid[row][col] = CellState.EMPTY;
-                            }
-                            else {
-                                globalGrid[row][col] = CellState.WEIGHT;
-                                weightGrid[row][col] = CellState.WEIGHT;
-                            }
-                            changedRow = row;
-                            changedCol = col;
-                            break;
-                        case CellState.WEIGHT:
-                            if (changedCol == col && changedRow == row) continue;
-                            if (globalObstacle == "wall") {
-                                globalGrid[row][col] = CellState.OBSTACLE;
-                                animationGrid[row][col] = 2;
-                                weightGrid[row][col] = 0;
-                            }
-                            else {
-                                globalGrid[row][col] = CellState.EMPTY;
-                                weightGrid[row][col] = 0;
-                            }
-                            changedRow = row;
-                            changedCol = col;
-                            break;
-                        case CellState.EMPTY:
-                            if (changedCol == col && changedRow == row) continue;
-                            if (globalObstacle == "wall") {
-                                globalGrid[row][col] = CellState.OBSTACLE;
-                                animationGrid[row][col] = 2;
-                                weightGrid[row][col] = CellState.EMPTY;
-                            }
-                            else {
-                                globalGrid[row][col] = CellState.WEIGHT;
-                                weightGrid[row][col] = CellState.WEIGHT;
-                            }
-                            changedRow = row;
-                            changedCol = col;
-                            break;
-                        default:
-                            // do nothing
-                            break;
-                    }
-                    resetCanvas();
-                    drawGrid();
-                }
-            }
-        }
-    }
-});
-
-window.addEventListener("mouseup", (e) => {
-    mouseX = parseInt(e.clientX - offsetX);
-    mouseY = parseInt(e.clientY - offsetY);
-    canMove = 0;
-    changedRow = -1;
-    changedCol = -1;
-
-    // reset all cells where start or end were
-    for (var row = 0; row < globalGrid.length; row++) {
-        for (var col = 0; col < globalGrid[0].length; col++) {
-            if (globalGrid[row][col] == CellState.START || globalGrid[row][col] == CellState.END) {
-                globalGrid[row][col] = CellState.EMPTY;
-            }
-        }
-    }
-
-    //globalGrid[sRow][sCol] = CellState.START;
-    //globalGrid[tRow][tCol] = CellState.END;
-    if (weightGrid) {
-        weightGrid[sRow][sCol] = CellState.EMPTY;
-        weightGrid[tRow][tCol] = CellState.EMPTY;
-    }
-    ctx.clearRect(sCol * (cellWidth + padding), sRow * (cellHeight + padding), cellWidth + 2 * padding, cellHeight + 2 * padding);
-    ctx.clearRect(tCol * (cellWidth + padding), tRow * (cellHeight + padding), cellWidth + 2 * padding, cellHeight + 2 * padding);
-    resetCanvas();
-    drawGrid();
-});
