@@ -293,10 +293,6 @@ function toggleObstacleButton() {
 
 // resets the canvas
 function resetCanvas() {
-    var elem = document.getElementById("visualizeButton");
-    if (elem.innerText != "stop!") {
-        return;
-    }
     // Iterate over each row in the 2D array
     globalGrid.forEach((row, rInd) => {
         // Inside the outer forEach, iterate over each element in the row
@@ -961,12 +957,6 @@ function isValid(vis, row, col) {
 // function to perform BFS
 async function BFS(row, col) {
     if (gottaStop) {
-        animationGrid.forEach((row, rInd) => {
-            // Inside the outer forEach, iterate over each element in the row
-            row.forEach((element, cInd) => {
-                animationGrid[rInd][cInd] = 2;
-            });
-        });
         return;
     }
 
@@ -990,12 +980,6 @@ async function BFS(row, col) {
     drawGrid();
     await sleep(globalSpeed * 5);
     if (gottaStop) {
-        animationGrid.forEach((row, rInd) => {
-            // Inside the outer forEach, iterate over each element in the row
-            row.forEach((element, cInd) => {
-                animationGrid[rInd][cInd] = 2;
-            });
-        });
         return;
     }
     // Iterate while the queue
@@ -1158,13 +1142,6 @@ async function generateEmpty() {
     const numRows = globalGrid.length;
     const numCols = globalGrid[0].length;
 
-    animationGrid.forEach((row, rInd) => {
-        row.forEach((element, cInd) => {
-            animationGrid[rInd][cInd] = 2;
-        });
-    });
-
-    resetCanvas();
     var elem = document.getElementById("visualizeButton");
     elem.innerText = "stop!";
     toggleVisualizeButton();
@@ -1172,21 +1149,20 @@ async function generateEmpty() {
     weightGrid = Array.from({ length: numRows }, () => Array(numCols).fill(CellState.EMPTY));
     globalGrid[sRow][sCol] = CellState.START;
     globalGrid[tRow][tCol] = CellState.END;
+    resetCanvas();
+    animationGrid.forEach((row, rInd) => {
+        row.forEach((element, cInd) => {
+            animationGrid[rInd][cInd] = 2;
+        });
+    });
     drawGrid();
 }
 
 // generates a grid with random walls
 async function generateRandom() {
-    resetCanvas();
     if (stopper) return;
     const numRows = globalGrid.length;
     const numCols = globalGrid[0].length;
-
-    animationGrid.forEach((row, rInd) => {
-        row.forEach((element, cInd) => {
-            animationGrid[rInd][cInd] = 2;
-        });
-    });
 
     var elem = document.getElementById("visualizeButton");
     elem.innerText = "stop!";
@@ -1195,6 +1171,12 @@ async function generateRandom() {
     weightGrid = Array.from({ length: numRows }, () => Array(numCols).fill(CellState.EMPTY));
     globalGrid[sRow][sCol] = CellState.START;
     globalGrid[tRow][tCol] = CellState.END;
+    resetCanvas();
+    animationGrid.forEach((row, rInd) => {
+        row.forEach((element, cInd) => {
+            animationGrid[rInd][cInd] = 2;
+        });
+    });
     drawGrid();
 
     do {
@@ -1219,16 +1201,9 @@ async function generateRandom() {
 
 // generates a grid with random weights
 async function generateRandomWeights() {
-    resetCanvas();
     if (stopper) return;
     const numRows = globalGrid.length;
     const numCols = globalGrid[0].length;
-
-    animationGrid.forEach((row, rInd) => {
-        row.forEach((element, cInd) => {
-            animationGrid[rInd][cInd] = 2;
-        });
-    });
 
     var elem = document.getElementById("visualizeButton");
     elem.innerText = "stop!";
@@ -1237,6 +1212,12 @@ async function generateRandomWeights() {
     weightGrid = Array.from({ length: numRows }, () => Array(numCols).fill(CellState.EMPTY));
     globalGrid[sRow][sCol] = CellState.START;
     globalGrid[tRow][tCol] = CellState.END;
+    resetCanvas();
+    animationGrid.forEach((row, rInd) => {
+        row.forEach((element, cInd) => {
+            animationGrid[rInd][cInd] = 2;
+        });
+    });
     drawGrid();
 
     do {
@@ -1263,16 +1244,9 @@ async function generateRandomWeights() {
 
 // generates a grid with random walls and weights
 async function generateRandomObstaclesWeights() {
-    resetCanvas();
     if (stopper) return;
     const numRows = globalGrid.length;
     const numCols = globalGrid[0].length;
-
-    animationGrid.forEach((row, rInd) => {
-        row.forEach((element, cInd) => {
-            animationGrid[rInd][cInd] = 2;
-        });
-    });
 
     var elem = document.getElementById("visualizeButton");
     elem.innerText = "stop!";
@@ -1280,6 +1254,12 @@ async function generateRandomObstaclesWeights() {
     globalGrid = Array.from({ length: numRows }, () => Array(numCols).fill(CellState.EMPTY));
     globalGrid[sRow][sCol] = CellState.START;
     globalGrid[tRow][tCol] = CellState.END;
+    resetCanvas();
+    animationGrid.forEach((row, rInd) => {
+        row.forEach((element, cInd) => {
+            animationGrid[rInd][cInd] = 2;
+        });
+    });
     drawGrid();
 
     do {
@@ -1310,6 +1290,7 @@ async function generateRandomObstaclesWeights() {
 // 0 = no bias
 async function generateRecursive(bias) {
     if (stopper) return;
+    generateEmpty();
     stopper = 1;
     const numRows = globalGrid.length;
     const numCols = globalGrid[0].length;
@@ -1648,7 +1629,9 @@ function fastBFS(row, col) {
 // Add the event listeners for mousedown, mousemove, and mouseup
 canvas.addEventListener("mousedown", (e) => {
     var elem = document.getElementById("visualizeButton");
+    console.log("brr1");
     if (elem.innerText == "stop!") toggleVisualizeButton();
+    console.log("brr2");
 
     if (!weightGrid) {
         weightGrid = Array.from({ length: globalGrid.length }, () => Array(globalGrid[0].length).fill(CellState.EMPTY));
@@ -1660,6 +1643,7 @@ canvas.addEventListener("mousedown", (e) => {
     // Put your mousedown stuff here
     if (textHittest(startX, startY) == "start") {
         canMove = 1;
+        console.log("brr3");
     }
     else if (textHittest(startX, startY) == "end") {
         canMove = 2;
