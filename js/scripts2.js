@@ -7,7 +7,11 @@
 // Scripts
 // 
 
-// global variables
+/*
+ *
+ * GLOBAL VARIABLES
+ *
+ */
 let globalGrid = 0;
 let animationGrid = 0;
 let weightGrid = 0;
@@ -23,7 +27,15 @@ let printedW = 0;
 let aStarHeuristic = "manhattan";
 let gottaStop = 0;
 let globalObstacle = "wall";
+let changedRow = -1;
+let changedCol = -1;
 
+
+/*
+ *
+ * EVENTS
+ *
+ */
 window.addEventListener('DOMContentLoaded', event => {
     // Function to set active navbar item
     var setActiveNavItem = function (navItemSelector) {
@@ -266,11 +278,11 @@ function getFont(fontSize, width) {
     return (size | 0); // set font
 }
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * VISITEDFINDING * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/*
+ *
+ * DRAWING
+ *
+ */
 async function drawGrid() {
     // Clear the canvas
     ctx.textAlign = 'center';
@@ -679,7 +691,11 @@ function drawWeight(x, y) {
     ctx.fillText("5", centerX, centerY + yOffset + 1);
 }
 
-// enum for cell states
+/*
+ *
+ * ENUM
+ *
+ */
 const CellState = {
     EMPTY: 0,
     OBSTACLE: 1,
@@ -690,6 +706,11 @@ const CellState = {
     WEIGHT: 6
 };
 
+/*
+ *
+ * INITIALIZATION
+ *
+ */
 function initializeGrid() {
     canvas = document.getElementById('pathfindingCanvas');
     ctx = canvas.getContext('2d');
@@ -765,6 +786,12 @@ function isValid(vis, row, col) {
     return true;
 }
 
+
+/*
+ *
+ * ALGORITHMS
+ *
+ */
 // Function to perform the BFS traversal
 async function BFS(row, col) {
     if (gottaStop) {
@@ -1120,6 +1147,11 @@ function resetCanvas() {
     printedW = 0;
 }
 
+/*
+ *
+ * GRID GENERATION
+ *
+ */
 async function generateRandom() {
     resetCanvas();
     if (stopper) return;
@@ -1351,6 +1383,11 @@ async function divide(startX, startY, endX, endY, horizontal, bias) {
     }
 }
 
+/*
+ *
+ * PRIORITY QUEUE
+ *
+ */
 // User defined class
 // to store element and its priority
 class QElement {
@@ -1479,6 +1516,11 @@ async function ASTAR(startRow, startCol) {
     toggleVisualizeButton();
 }
 
+/*
+ *
+ * HELPER FUNCTIONS
+ *
+ */
 function getNeighbors(row, col, numRows, numCols) {
     const neighbors = [];
     if (row > 0 && globalGrid[row - 1][col] !== CellState.OBSTACLE) neighbors.push({ row: row - 1, col });
@@ -1649,9 +1691,6 @@ canvas.addEventListener("mousedown", (e) => {
         }
     }
 });
-
-var changedRow = -1;
-var changedCol = -1;
 
 window.addEventListener("mousemove", (e) => {
     if (!canMove) return;
