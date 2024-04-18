@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="Website to visualized algorithms and concepts in computer science." />
+    <meta name="author" content="Lennard Schober" />
+    <!-- Latex -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <title>cs visualized</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="assets/img/favicons/favicon.ico?v=M44lzPylqQ" sizes="all">
+    <link rel="apple-touch-icon" href="assets/img/favicons/apple-touch-icon.png"> <!-- 256x256 -->
+    <!-- Favicon -->
+
+    <!-- Font Awesome icons (free version)-->
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    <!-- Google fonts-->
+    <link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet" />
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <link href="css/styles.css" rel="stylesheet" />
+</head>
+
+<body id="page-top" onload="displayBogo();">
+    <!-- Navigation-->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white" id="mainNav">
+        <div class="container px-4 px-lg-5">
+            <a class="navbar-brand" style="filter: unset" href="#page-top">
+                <img src="assets/img/logo/logo_512.png" style="max-height:2rem;" />
+                cs visualized
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNavDarkDropdown" aria-controls="navbarNavDarkDropdown" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavDarkDropdown">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="algorithms" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            algorithms
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-start" style="
+                        min-width: 18rem;" aria-labelledby="navbarDarkDropdownMenuLink">
+                            <li><a class="dropdown-item" data-value="bfs">Breadth First Search<p style="float:right;">
+                                        \(\mathcal{O}(\infty)\)</p></a></li>
+                            <li><a class="dropdown-item" data-value="dfs">Depth First Search<p style="float:right;">
+                                        \(\mathcal{O}(n^2)\)</p></a></li>
+                            <li><a class="dropdown-item" data-value="astarMan">A* (Manhattan)<p style="float:right;">
+                                        \(\mathcal{O}(n^2)\)</p></a></li>
+                            <li><a class="dropdown-item" data-value="astarEuc">A* (Euclidean)<p style="float:right;">
+                                        \(\mathcal{O}(n^2)\)</p></a></li>
+                            <li><a class="dropdown-item" data-value="dijkstra">Dijkstra<p style="float:right;">
+                                        \(\mathcal{O}(n^2)\)</p></a></li>
+                            <li><a class="dropdown-item" data-value="greedyBestFirst">Greedy Best First Search<p style="float:right;">
+                                        \(\mathcal{O}(n^2)\)</p></a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="values" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            patterns
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-start"
+                            aria-labelledby="navbarDarkDropdownMenuLink">
+                            <script src="/js/scripts.js"></script>
+                            <li><a class="dropdown-item" data-value="genEmpty">empty</a></li>
+                            <li><a class="dropdown-item" data-value="genRecursive">recursive division</a></li>
+                            <li><a class="dropdown-item" data-value="genRecursiveHorizontal">recursive division
+                                    horizontal bias</a></li>
+                            <li><a class="dropdown-item" data-value="genRecursiveVertical">recursive division vertical
+                                    bias</a></li>
+                            <li><a class="dropdown-item" data-value="genRandom">random obstacles</a></li>
+                            <li><a class="dropdown-item" data-value="genRandomWeights">random weights</a></li>
+                            <li><a class="dropdown-item" data-value="genRandomObstaclesWeights">random obstacles +
+                                    weights</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="#info">info</a></li>
+                </ul>
+            </div>
+            <a class="btn btn-tertiary" id="obstacleButton" onclick="toggleObstacleButton();">wall</a>
+            <a class="btn btn-tertiary" id="speedButton" onclick="toggleSpeedButton();">fast</a>
+            <a class="btn btn-secondary" id="visualizeButton" onclick="toggleVisualizeButton();">choose algo</a>
+        </div>
+    </nav>
+    <!-- pathfinding-->
+    <section class="pathfinding-section" id="pathfinding">
+        <div class="container align-items-center position-float">
+            <canvas class="pathfindingCanvas" id="pathfindingCanvas"></canvas>
+        </div>
+    </section>
+    <section class="info-section" id="info">
+        <div class="container align-items-center position-float">
+            <div class="row gx-0 mb-5 mb-lg-0 justify-content-center">
+                <div class="col-lg-6">
+                    <figure>
+                        <img class="img-fluid" src="assets/img/complexityTable.png" alt="..." />
+                        <figcaption>
+                            <div class="project-text w-100 my-auto text-center text-lg-right">
+                                <p class="mb-0 mt-2 ms-3 text-start text-black-50">
+                                    \(n:\) number of elements<br>
+                                    \(d:\) number of digits of the largest element<br>
+                                    \(k:\) difference between largest and smallest element<br>
+                                    max\(:\) largest element
+                                </p>
+                            </div>
+                        </figcaption>
+                    </figure>
+                </div>
+                <div class="col-lg-6">
+                    <div class="bg-white text-center h-100 project">
+                        <div class="d-flex h-100">
+                            <p class="mb-0 ms-5 text-start text-black-50">
+                                \(\require{mathtools}\)
+                                By \(\mathcal{O}(f(n))\), spoken "big O of f(n)", we denote the upper bound of time
+                                and space
+                                complexity of our sorting algorithms.<br>
+                                Mathematically, let \(f:\mathbb{N}\rightarrow\mathbb{N}\) be a (computable)
+                                function, then we define \[\mathcal{O}(f(n))\coloneqq\{g(n) \;|\; \exists c,N>0:
+                                g(n)\leq c\cdot f(n) \forall n\geq N\}.\]
+                                Intuitively we say \(g(n)\in\mathcal{O}(f(n))\) or \(g(n)=\mathcal{O}(f(n))\)
+                                whenever
+                                \(f\) grows asymptotically at least as fast as \(g\).<br>
+                                For example, \(\mathcal{O}(1)\subseteq\mathcal{O}(\log
+                                n)\subseteq\mathcal{O}(n)\subseteq\cdots\)<br><br>
+                                A sorting algorithm is called <em>stable</em> if the initial order of equal elements
+                                is
+                                preserved. When sorting the array \([4,3_a,1,3_b,2]\), a stable sorting algorithm
+                                would output \([1,2,3_a,3_b,4]\), whereas an unstable one <em>might</em> output
+                                \([1,2,3_b,3_a,4]\).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer-->
+    <footer class="footer small bg-white text-center text-black-50" style="background-color: rgba(0, 0, 0, 0.3);">
+        <div class="container px-4 px-lg-5">Copyright &copy; cs visualized 2024</div>
+    </footer>
+    <!-- Bootstrap core JS-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Core theme JS-->
+    <script src="js/scripts2.js"></script>
+    <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
+    <!-- * *                               SB Forms JS                               * *-->
+    <!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->
+    <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
+    <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>
