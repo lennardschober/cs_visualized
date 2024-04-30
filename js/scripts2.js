@@ -237,6 +237,8 @@ document.querySelectorAll('.dropdown-item').forEach(item => {
 // If yes, set the selectedText to the index of that text
 // Add the event listeners for mousedown, mousemove, and mouseup
 canvas.addEventListener("mousedown", (e) => {
+    console.log("MOUSEDOWN");
+
     var elem = document.getElementById("visualizeButton");
     if (elem.innerText == "stop!") toggleVisualizeButton();
 
@@ -414,7 +416,8 @@ window.addEventListener("mousemove", (e) => {
 });
 
 // handle mouseup events
-window.addEventListener("mouseup", (e) => {
+canvas.addEventListener("mouseup", (e) => {
+    console.log("MOUSEUP");
     mouseX = getMousePos(e).x;
     mouseY = getMousePos(e).y;
     canMove = 0;
