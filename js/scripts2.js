@@ -216,6 +216,9 @@ document.querySelectorAll('.dropdown-item').forEach(item => {
             case "genRandomObstaclesWeights":
                 generateRandomObstaclesWeights();
                 break;
+            case "genRecursiveDFS":
+                generateRecursiveDFS();
+                break;
             case "genRecursive":
                 generateRecursive(0);
                 break;
@@ -237,8 +240,6 @@ document.querySelectorAll('.dropdown-item').forEach(item => {
 // If yes, set the selectedText to the index of that text
 // Add the event listeners for mousedown, mousemove, and mouseup
 canvas.addEventListener("mousedown", (e) => {
-    console.log("MOUSEDOWN");
-
     var elem = document.getElementById("visualizeButton");
     if (elem.innerText == "stop!") toggleVisualizeButton();
 
@@ -417,7 +418,6 @@ window.addEventListener("mousemove", (e) => {
 
 // handle mouseup events
 canvas.addEventListener("mouseup", (e) => {
-    console.log("MOUSEUP");
     mouseX = getMousePos(e).x;
     mouseY = getMousePos(e).y;
     canMove = 0;
@@ -1499,6 +1499,68 @@ async function generateRandomObstaclesWeights() {
     drawGrid();
 }
 
+// generate recursively using DFS
+async function generateRecursiveDFS() {
+    if (stopper) return;
+    stopper = 1;
+
+    const rows = globalGrid.length;
+    const cols = globalGrid[0].length;
+    // Create a grid and fill with walls
+    globalGrid = Array.from({ length: rows }, () => Array(cols).fill(1));
+
+    animationGrid = Array.from({ length: rows }, () => Array(cols).fill(2));
+    drawGrid();
+
+    // Recursive DFS function
+    async function dfs(x, y) {
+        globalGrid[y][x] = 0; // Mark the current cell as visited
+        const directions = [
+            [-1, 0], // up
+            [0, 1],  // right
+            [1, 0],  // down
+            [0, -1]  // left
+        ];
+
+        shuffle(directions); // Randomize the directions
+
+        for (let i = 0; i < directions.length; i++) {
+            const [dx, dy] = directions[i];
+            const nx = x + dx * 2;
+            const ny = y + dy * 2;
+
+            // Check if the next cell is within the grid and not visited
+            if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && globalGrid[ny][nx] === 1) {
+                const mx = x + dx;
+                const my = y + dy;
+                globalGrid[my][mx] = 0; // Make the wall a passage
+
+                resetCanvas();
+                drawGrid();
+                await sleep(globalSpeed * 10);
+
+                await dfs(nx, ny);
+            }
+        }
+    }
+
+    await dfs(sCol, sRow);
+
+    // open one random side of end point if encased
+    if (!endHasEmptyNeighbors()) {
+        let temp = getClosedSides();
+        shuffle(temp);
+        const [dx, dy] = temp[0];
+        const mx = tCol + dx;
+        const my = tRow + dy;
+        globalGrid[my][mx] = 0; // Make the wall a passage
+    }
+
+    stopper = 0;
+    resetCanvas();
+    drawGrid();
+}
+
 // function to generate a maze using recursive division algorithm
 // 1 = horizontal bias
 // -1 = vertical bias
@@ -1604,6 +1666,33 @@ class PriorityQueue {
  * HELPER FUNCTIONS
  *
  */
+
+function endHasEmptyNeighbors() {
+    if (tRow > 0 && globalGrid[tRow - 1][tCol] == CellState.EMPTY) return true;
+    if (tRow + 1 < globalGrid.length && globalGrid[tRow + 1][tCol] == CellState.EMPTY) return true;
+    if (tCol > 0 && globalGrid[tRow][tCol - 1] == CellState.EMPTY) return true;
+    if (tCol + 1 < globalGrid[0].length && globalGrid[tRow][tCol + 1] == CellState.EMPTY) return true;
+    return false;
+}
+
+// check if end point has any opening
+function getClosedSides() {
+    let directions = [];
+    if (tRow > 0 && globalGrid[tRow - 1][tCol] == CellState.OBSTACLE) directions.push([-1, 0]);
+    if (tRow + 1 < globalGrid.length && globalGrid[tRow + 1][tCol] == CellState.OBSTACLE) directions.push([1, 0]);
+    if (tCol > 0 && globalGrid[tRow][tCol - 1] == CellState.OBSTACLE) directions.push([0, -1]);
+    if (tCol + 1 < globalGrid[0].length && globalGrid[tRow][tCol + 1] == CellState.OBSTACLE) directions.push([0, 1]);
+
+    return directions;
+}
+
+// Function to shuffle array
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
 
 // returns the heuristic value for A* and greedy BFS
 function heuristic(row, col, goalRow, goalCol) {
@@ -1832,4 +1921,7 @@ function fastBFS(row, col) {
     }
     return false;
 }
+
+
+
 
