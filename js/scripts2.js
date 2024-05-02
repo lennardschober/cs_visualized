@@ -1549,11 +1549,13 @@ async function generateRecursiveDFS() {
     // open one random side of end point if encased
     if (!endHasEmptyNeighbors()) {
         let temp = getClosedSides();
+        console.log(temp)
+        console.log(tRow, tCol);
         shuffle(temp);
         const [dx, dy] = temp[0];
-        const mx = tCol + dx;
-        const my = tRow + dy;
-        globalGrid[my][mx] = 0; // Make the wall a passage
+        const mx = tRow + dx;
+        const my = tCol + dy;
+        globalGrid[mx][my] = 0; // Make the wall a passage
     }
 
     stopper = 0;
