@@ -201,7 +201,7 @@ document.querySelectorAll('.dropdown-item').forEach(item => {
                 elem.innerText = "stop!";
                 toggleVisualizeButton();
                 globalAlgo = "greedyBestFirst";
-                elem.innerText = "Greedy Best First Search";
+                elem.innerText = "Greedy BeFS";
                 visBtnText = elem.innerText;
                 break;
             case "genEmpty":
@@ -457,7 +457,7 @@ function toggleVisualizeButton() {
     var elem = document.getElementById("visualizeButton");
 
     if (elem.innerText == "BFS" || elem.innerText == "DFS" || elem.innerText == "A*"
-        || elem.innerText == "Dijkstra" || elem.innerText == "Greedy Best First Search") {
+        || elem.innerText == "Dijkstra" || elem.innerText == "Greedy BeFS") {
         visBtnText = elem.innerText;
         elem.innerText = "stop!";
         elem.style.backgroundColor = "red";
