@@ -1361,7 +1361,7 @@ async function generateEmpty() {
     elem.innerText = "stop!";
     toggleVisualizeButton();
     globalGrid = Array.from({ length: numRows }, () => Array(numCols).fill(CellState.EMPTY));
-    weightGrid = Array.from({ length: numRows }, () => Array(numCols).fill(CellState.EMPTY));
+    weightGrid = Array.from({ length: numRows }, () => Array(numCols).fill(CellState.WEIGHT));
     globalGrid[sRow][sCol] = CellState.START;
     globalGrid[tRow][tCol] = CellState.END;
     resetCanvas();
