@@ -1503,12 +1503,13 @@ async function generateRandomObstaclesWeights() {
 async function generateRecursiveDFS() {
     if (stopper) return;
     stopper = 1;
+    generateEmpty();
 
     const rows = globalGrid.length;
     const cols = globalGrid[0].length;
     // Create a grid and fill with walls
     globalGrid = Array.from({ length: rows }, () => Array(cols).fill(1));
-
+    weightGrid = Array.from({ length: rows }, () => Array(cols).fill(CellState.EMPTY));
     animationGrid = Array.from({ length: rows }, () => Array(cols).fill(2));
     drawGrid();
 
