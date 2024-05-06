@@ -972,7 +972,7 @@ async function drawShortestPath(parent, endCell) {
         // sum up the path length
         pathLength += (weightGrid && weightGrid[cell[0]][cell[1]] == CellState.WEIGHT) ? 5 : 1;
         drawGrid();
-        await sleep(globalSpeed * 50);
+        await sleep(globalSpeed * 20);
         if (gottaStop) return;
     }
     globalGrid[tRow][tCol] = CellState.PATH;
@@ -1254,7 +1254,7 @@ async function DFS(startRow, startCol) {
     globalGrid[startRow][startCol] = CellState.VISITED;
     animationGrid[startRow][startCol] = 2;
     drawGrid();
-    await sleep(globalSpeed * 10);
+    await sleep(globalSpeed * 5);
     if (gottaStop) return;
 
     while (stack.length > 0) {
@@ -1278,7 +1278,7 @@ async function DFS(startRow, startCol) {
                 }
                 globalGrid[newRow][newCol] = CellState.VISITED;
                 drawGrid();
-                await sleep(globalSpeed * 10);
+                await sleep(globalSpeed * 5);
                 if (gottaStop) return;
             }
         }
