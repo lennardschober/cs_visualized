@@ -455,8 +455,6 @@ document.getElementById("sizeSlider").oninput = function () {
 
     anchorFixed = false;
 
-    console.log(padding);
-
     resetCanvas();
 }
 
@@ -481,20 +479,12 @@ function rasterize() {
             timeDisplay.textContent = "" + ((t1 - t0) / 100).toFixed(2) + "\u03BC" + "s";
             break;
         case "aa":
-            if (gridSize > 150) {
-                var t0 = performance.now();
+            var t0 = performance.now();
+            for (let i = 0; i < 100; i++) {
                 rasterizeAntiAliasedLine();
-                var t1 = performance.now();
-                timeDisplay.textContent = "" + ((t1 - t0)).toFixed(0) + "ms";
             }
-            else {
-                var t0 = performance.now();
-                for (let i = 0; i < 10; i++) {
-                    rasterizeAntiAliasedLine();
-                }
-                var t1 = performance.now();
-                timeDisplay.textContent = "" + ((t1 - t0) / 10).toFixed(1) + "ms";
-            }
+            var t1 = performance.now();
+            timeDisplay.textContent = "" + ((t1 - t0) / 100).toFixed(2) + "ms";
             break;
         case "midPoint":
             var t0 = performance.now();
@@ -552,7 +542,6 @@ function rasterizeBresenham() {
 }
 
 function rasterizeAntiAliasedLine() {
-    resetCanvas();
     const x0 = originPoint[1];
     const y0 = originPoint[0];
     const x1 = anchorPoint[1];
@@ -570,7 +559,6 @@ function rasterizeAntiAliasedLine() {
             }
         });
     });
-    drawGrid();
 }
 
 function lineThroughPixel(x, y, x1, y1, x2, y2) {
