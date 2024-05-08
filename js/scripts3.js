@@ -225,6 +225,7 @@ canvas.addEventListener("mousedown", (e) => {
 
     anchorFixed = !anchorFixed;
     rasterize();
+    return;
 });
 
 
@@ -253,19 +254,7 @@ function toggleVisualizeButton() {
         elem.style.backgroundColor = "#26ff60";
         gottaStop = 1;
     }
-}
-
-// toggles the speed button to be fast or slow
-function toggleAntiAliasing() {
-    var elem = document.getElementById("antiAliasingButton");
-    if (elem.innerText == "Anti-Aliasing?") {
-        elem.innerText = "Anti-Aliasing!";
-        elem.style.backgroundColor = "rgba(0, 0, 0, 0.3)";
-    }
-    else {
-        elem.innerText = "Anti-Aliasing?";
-        elem.style.backgroundColor = "rgba(0, 0, 0, 0.1)";
-    }
+    return;
 }
 
 function initializeGrid() {
@@ -290,6 +279,8 @@ function initializeGrid() {
     globalGrid = Array.from({ length: numRows }, () => Array(numCols).fill(CellState.WHITE));
 
     globalGrid[originPoint[0]][originPoint[1]] = CellState.BLACK;
+
+    return;
 }
 
 function drawGrid() {
@@ -378,6 +369,8 @@ function drawGrid() {
 
     ctx.lineWidth = Math.exp((logGridSize - logGridSize1) / (logGridSize2 - logGridSize1) * (Math.log(0.5) - Math.log(5)) + Math.log(5));
     ctx.stroke(); // Render the path
+
+    return;
 }
 
 // resets the canvas
@@ -388,6 +381,8 @@ function resetCanvas() {
     globalGrid[anchorPoint[0]][anchorPoint[1]] = CellState.BLACK;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawGrid();
+
+    return;
 }
 
 /*
@@ -456,6 +451,7 @@ document.getElementById("sizeSlider").oninput = function () {
     anchorFixed = false;
 
     resetCanvas();
+    return;
 }
 
 function rasterize() {
@@ -499,6 +495,7 @@ function rasterize() {
     }
 
     drawGrid();
+    return;
 }
 
 function rasterizeDDA() {
@@ -515,6 +512,8 @@ function rasterizeDDA() {
     for (let i = 0; i <= length; i++) {
         globalGrid[Math.round(x0 + i * dx)][Math.round(y0 + i * dy)] = CellState.BLACK;
     }
+
+    return;
 }
 
 const { abs, sign } = Math;
@@ -539,6 +538,8 @@ function rasterizeBresenham() {
         if (e2 > -dy) { err -= dy; x0 += sx; }
         if (e2 < dx) { err += dx; y0 += sy; }
     }
+
+    return;
 }
 
 function rasterizeAntiAliasedLine() {
@@ -559,6 +560,8 @@ function rasterizeAntiAliasedLine() {
             }
         });
     });
+
+    return;
 }
 
 function lineThroughPixel(x, y, x1, y1, x2, y2) {
@@ -636,6 +639,8 @@ function lineThroughPixel(x, y, x1, y1, x2, y2) {
             globalGrid[y][x] = CellState.WHITE;
             break;
     }
+
+    return;
 }
 
 var midPointCircle = function () {
@@ -691,6 +696,8 @@ var midPointCircle = function () {
         YX0 = y + x0;
         minusYX0 = -y + x0;
     }
+
+    return;
 };
 
 
