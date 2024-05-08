@@ -8,7 +8,7 @@ let animationGrid = 0;
 let weightGrid = 0;
 let cellWidth = 25;
 let cellHeight = 25;
-const padding = 1;
+let padding = 1;
 let sRow, sCol, tRow, tCol = 0;
 let canvas = document.getElementById('pathfindingCanvas');
 let ctx = canvas.getContext('2d');
@@ -434,6 +434,9 @@ function getMousePos(evt) {
 document.getElementById("sizeSlider").oninput = function () {
     gridSize = 2 * this.value + 1;
 
+    // adjust padding
+    padding = 2 + (0 - 2) / (301 - 21) * (gridSize - 21);
+
     let numCols = gridSize;
     let numRows = Math.floor(numCols * winHeight / winWidth);
 
@@ -451,6 +454,8 @@ document.getElementById("sizeSlider").oninput = function () {
     anchorPoint = originPoint;
 
     anchorFixed = false;
+
+    console.log(padding);
 
     resetCanvas();
 }
