@@ -588,51 +588,55 @@ function lineThroughPixel(x, y, x1, y1, x2, y2) {
     const lowRight = { x: x + 0.5, y: y + 0.5 };
 
     // calculate y distance if we make line 0.5 thick
-    const a = 0.1 * slope;
-    const yThick = Math.abs(slope) < 1 ? 1 : Math.sqrt((a ** 2) + (slope ** 2));
+    const a = 0.5 * slope;
+    const yThick = Math.abs(slope) < 1 ? 1 : Math.sqrt((a ** 2) + (slope ** 2)) * 0.9;
 
     let counter = 0
     // count how many subpixels are covered
     // top row
     if (slope * topLeft.x + yIntercept - yThick <= topLeft.y && slope * topLeft.x + yIntercept + yThick >= topLeft.y) counter++;
-    if (slope * topMid.x + yIntercept - yThick <= topMid.y && slope * topMid.x + yIntercept + yThick >= topMid.y) counter++;
+    if (slope * topMid.x + yIntercept - yThick <= topMid.y && slope * topMid.x + yIntercept + yThick >= topMid.y) counter += 2;
     if (slope * topRight.x + yIntercept - yThick <= topRight.y && slope * topRight.x + yIntercept + yThick >= topRight.y) counter++;
     // mid row
-    if (slope * midLeft.x + yIntercept - yThick <= midLeft.y && slope * midLeft.x + yIntercept + yThick >= midLeft.y) counter++;
-    if (slope * midMid.x + yIntercept - yThick <= midMid.y && slope * midMid.x + yIntercept + yThick >= midMid.y) counter++;
-    if (slope * midRight.x + yIntercept - yThick <= midRight.y && slope * midRight.x + yIntercept + yThick >= midRight.y) counter++;
+    if (slope * midLeft.x + yIntercept - yThick <= midLeft.y && slope * midLeft.x + yIntercept + yThick >= midLeft.y) counter += 2;
+    if (slope * midMid.x + yIntercept - yThick <= midMid.y && slope * midMid.x + yIntercept + yThick >= midMid.y) counter += 3;
+    if (slope * midRight.x + yIntercept - yThick <= midRight.y && slope * midRight.x + yIntercept + yThick >= midRight.y) counter += 2;
     // bottom row
     if (slope * lowLeft.x + yIntercept - yThick <= lowLeft.y && slope * lowLeft.x + yIntercept + yThick >= lowLeft.y) counter++;
-    if (slope * lowMid.x + yIntercept - yThick <= lowMid.y && slope * lowMid.x + yIntercept + yThick >= lowMid.y) counter++;
+    if (slope * lowMid.x + yIntercept - yThick <= lowMid.y && slope * lowMid.x + yIntercept + yThick >= lowMid.y) counter += 2;
     if (slope * lowRight.x + yIntercept - yThick <= lowRight.y && slope * lowRight.x + yIntercept + yThick >= lowRight.y) counter++;
 
     // Check if the point (x, y) lies on the line
     switch (counter) {
         case 1:
-            globalGrid[y][x] = CellState.BLACK30;
-            break;
         case 2:
-            globalGrid[y][x] = CellState.BLACK30;
-            break;
         case 3:
-            globalGrid[y][x] = CellState.BLACK40;
+            globalGrid[y][x] = CellState.BLACK30;
             break;
         case 4:
-            globalGrid[y][x] = CellState.BLACK50;
-            break;
         case 5:
-            globalGrid[y][x] = CellState.BLACK60;
+            globalGrid[y][x] = CellState.BLACK40;
             break;
         case 6:
-            globalGrid[y][x] = CellState.BLACK70;
-            break;
         case 7:
-            globalGrid[y][x] = CellState.BLACK80;
+            globalGrid[y][x] = CellState.BLACK50;
             break;
         case 8:
+        case 9:
+            globalGrid[y][x] = CellState.BLACK60;
+            break;
+        case 10:
+        case 11:
+            globalGrid[y][x] = CellState.BLACK70;
+            break;
+        case 12:
+        case 13:
+            globalGrid[y][x] = CellState.BLACK80;
+            break;
+        case 14:
             globalGrid[y][x] = CellState.BLACK90;
             break;
-        case 9:
+        case 15:
             globalGrid[y][x] = CellState.BLACK;
             break;
         default:
