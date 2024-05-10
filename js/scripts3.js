@@ -195,8 +195,8 @@ window.addEventListener('mousemove', (e) => {
 
     for (var row = 0; row < globalGrid.length; row++) {
         for (var col = 0; col < globalGrid[0].length; col++) {
-            if (mouseX >= col * (cellWidth + padding) + padding && mouseX <= col * (cellWidth + padding) + padding + cellWidth &&
-                mouseY >= row * (cellWidth + padding) + padding && mouseY <= row * (cellWidth + padding) + padding + cellWidth) {
+            if (mouseX >= col * (cellWidth + padding) + 0.5 * padding && mouseX <= col * (cellWidth + padding) + 1.5 * padding + cellWidth &&
+                mouseY >= row * (cellWidth + padding) + 0.5 * padding && mouseY <= row * (cellWidth + padding) + 1.5 * padding + cellWidth) {
                 // set anchor point
                 anchorPoint = [row, col];
                 rasterize();
@@ -214,8 +214,8 @@ canvas.addEventListener("mousedown", (e) => {
 
     for (var row = 0; row < globalGrid.length; row++) {
         for (var col = 0; col < globalGrid[0].length; col++) {
-            if (mouseX >= col * (cellWidth + padding) + padding && mouseX <= col * (cellWidth + padding) + padding + cellWidth &&
-                mouseY >= row * (cellWidth + padding) + padding && mouseY <= row * (cellWidth + padding) + padding + cellWidth) {
+            if (mouseX >= col * (cellWidth + padding) + 0.5 * padding && mouseX <= col * (cellWidth + padding) + 1.5 * padding + cellWidth &&
+                mouseY >= row * (cellWidth + padding) + 0.5 * padding && mouseY <= row * (cellWidth + padding) + 1.5 * padding + cellWidth) {
                 // set anchor point
                 anchorPoint = [row, col];
                 resetCanvas();
