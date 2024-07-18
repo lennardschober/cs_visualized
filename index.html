@@ -168,6 +168,71 @@
     <!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->
     <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
     <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', event => {
+            // Function to set active navbar item
+            var setActiveNavItem = function (navItemSelector) {
+                const navbarLinks = document.querySelectorAll('.nav-link');
+                navbarLinks.forEach(link => {
+                    if (link.getAttribute('href') === navItemSelector) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+            };
+
+            // Navbar shrink function
+            var navbarShrink = function () {
+                const navbarCollapsible = document.body.querySelector('#mainNav');
+                var navbarHeight = document.getElementById('mainNav').offsetHeight; // Get the height of the navbar
+                // get distance from top of doc to top of section (accounting for navbar)
+                var projects = document.getElementById('projects');
+                var top1 = projects.getBoundingClientRect().top + window.scrollY - navbarHeight;
+                var contact = document.getElementById('contact');
+                var top2 = contact.getBoundingClientRect().top + window.scrollY - navbarHeight;
+                var scrollPos = window.scrollY;
+
+                if (!navbarCollapsible) {
+                    return;
+                }
+                // decide which navbar to show depending on scroll position
+                if (scrollPos < top1) { // transparent navbar
+                    navbarCollapsible.classList.remove('navbar-shrink');
+                    navbarCollapsible.classList.remove('navbar-shrink2');
+                    setActiveNavItem('#home'); // Set the home element as active
+                } else if (scrollPos >= top1 && scrollPos < top2) { // white navbar
+                    navbarCollapsible.classList.remove('navbar-shrink2');
+                    navbarCollapsible.classList.add('navbar-shrink');
+                    setActiveNavItem('#projects'); // Set the projects element as active
+                } else { // black navbar
+                    navbarCollapsible.classList.remove('navbar-shrink');
+                    navbarCollapsible.classList.add('navbar-shrink2');
+                    setActiveNavItem('#contact'); // Set the contact element as active
+                }
+            };
+
+            // Shrink the navbar 
+            navbarShrink();
+
+            // Shrink the navbar when page is scrolled
+            document.addEventListener('scroll', navbarShrink);
+
+            // Collapse responsive navbar when toggler is visible
+            const navbarToggler = document.body.querySelector('.navbar-toggler');
+            const responsiveNavItems = [].slice.call(
+                document.querySelectorAll('#navbarResponsive .nav-link')
+            );
+            responsiveNavItems.map(function (responsiveNavItem) {
+                responsiveNavItem.addEventListener('click', () => {
+                    if (window.getComputedStyle(navbarToggler).display !== 'none') {
+                        navbarToggler.click();
+                    }
+                });
+            });
+            updateWindow();
+        });
+    </script>
 </body>
 
 </html>
