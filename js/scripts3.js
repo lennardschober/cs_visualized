@@ -476,11 +476,11 @@ function rasterize() {
             break;
         case "aa":
             var t0 = performance.now();
-            for (let i = 0; i < 100; i++) {
+            for (let i = 0; i < 1000; i++) {
                 rasterizeAntiAliasedLine();
             }
             var t1 = performance.now();
-            timeDisplay.textContent = "" + ((t1 - t0) / 100).toFixed(2) + "ms";
+            timeDisplay.textContent = "" + ((t1 - t0) / 1).toFixed(1) + "\u03BC" + "s";
             break;
         case "midPoint":
             var t0 = performance.now();
