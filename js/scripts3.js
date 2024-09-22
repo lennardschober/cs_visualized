@@ -400,7 +400,7 @@ const CellState = {
     BLACK60: 6,
     BLACK70: 7,
     BLACK80: 8,
-    BLACK90: 9,
+    BLACK90: 9
 };
 
 
@@ -542,109 +542,129 @@ function rasterizeBresenham() {
     return;
 }
 
-function rasterizeAntiAliasedLine() {
-    const x0 = originPoint[1];
-    const y0 = originPoint[0];
-    const x1 = anchorPoint[1];
-    const y1 = anchorPoint[0];
-
-    const xMax = Math.max(x0, x1);
-    const xMin = Math.min(x0, x1);
-    const yMax = Math.max(y0, y1);
-    const yMin = Math.min(y0, y1);
-
-    globalGrid.forEach((row, rInd) => {
-        row.forEach((elem, cInd) => {
-            if (cInd <= xMax && cInd >= xMin && rInd <= yMax && rInd >= yMin) {
-                lineThroughPixel(cInd, rInd, x0, y0, x1, y1);
-            }
-        });
-    });
-
-    return;
+// Integer part of x
+function ipart(x) {
+    return Math.floor(x);
 }
 
-function lineThroughPixel(x, y, x1, y1, x2, y2) {
-    if (x2 == x1) {
-        globalGrid[y][x] = CellState.BLACK;
-        return;
-    }
+function round(x) {
+    return ipart(x + 0.5);
+}
 
-    // Calculate the slope of the line
-    var slope = (y2 - y1) / (x2 - x1);
+// Fractional part of x
+function fpart(x) {
+    return x - Math.floor(x);
+}
 
-    // Calculate the y-intercept of the line
-    var yIntercept = y1 - slope * x1;
+function rfpart(x) {
+    return 1 - fpart(x);
+}
 
-    // subpixels
-    const topLeft = { x: x - 0.5, y: y - 0.5 };
-    const topMid = { x: x, y: y - 0.5 };
-    const topRight = { x: x + 0.5, y: y - 0.5 };
-    const midLeft = { x: x - 0.5, y: y };
-    const midMid = { x: x, y: y };
-    const midRight = { x: x + 0.5, y: y };
-    const lowLeft = { x: x - 0.5, y: y + 0.5 };
-    const lowMid = { x: x, y: y + 0.5 };
-    const lowRight = { x: x + 0.5, y: y + 0.5 };
-
-    // calculate y distance if we make line 0.5 thick
-    const a = 0.5 * slope;
-    const yThick = Math.abs(slope) < 1 ? 1 : Math.sqrt((a ** 2) + (slope ** 2)) * 0.9;
-
-    let counter = 0
-    // count how many subpixels are covered
-    // top row
-    if (slope * topLeft.x + yIntercept - yThick <= topLeft.y && slope * topLeft.x + yIntercept + yThick >= topLeft.y) counter++;
-    if (slope * topMid.x + yIntercept - yThick <= topMid.y && slope * topMid.x + yIntercept + yThick >= topMid.y) counter += 2;
-    if (slope * topRight.x + yIntercept - yThick <= topRight.y && slope * topRight.x + yIntercept + yThick >= topRight.y) counter++;
-    // mid row
-    if (slope * midLeft.x + yIntercept - yThick <= midLeft.y && slope * midLeft.x + yIntercept + yThick >= midLeft.y) counter += 2;
-    if (slope * midMid.x + yIntercept - yThick <= midMid.y && slope * midMid.x + yIntercept + yThick >= midMid.y) counter += 3;
-    if (slope * midRight.x + yIntercept - yThick <= midRight.y && slope * midRight.x + yIntercept + yThick >= midRight.y) counter += 2;
-    // bottom row
-    if (slope * lowLeft.x + yIntercept - yThick <= lowLeft.y && slope * lowLeft.x + yIntercept + yThick >= lowLeft.y) counter++;
-    if (slope * lowMid.x + yIntercept - yThick <= lowMid.y && slope * lowMid.x + yIntercept + yThick >= lowMid.y) counter += 2;
-    if (slope * lowRight.x + yIntercept - yThick <= lowRight.y && slope * lowRight.x + yIntercept + yThick >= lowRight.y) counter++;
-
-    // Check if the point (x, y) lies on the line
-    switch (counter) {
+function val_to_cellstate(val) {
+    val = Math.round(10 * val)
+    switch (val) {
+        case 0:
+            return CellState.WHITE;
         case 1:
+            return CellState.WHITE;
         case 2:
+            return CellState.BLACK20;
         case 3:
-            globalGrid[y][x] = CellState.BLACK30;
-            break;
+            return CellState.BLACK30;
         case 4:
+            return CellState.BLACK40;
         case 5:
-            globalGrid[y][x] = CellState.BLACK40;
-            break;
+            return CellState.BLACK50;
         case 6:
+            return CellState.BLACK60;
         case 7:
-            globalGrid[y][x] = CellState.BLACK50;
-            break;
+            return CellState.BLACK70;
         case 8:
+            return CellState.BLACK80;
         case 9:
-            globalGrid[y][x] = CellState.BLACK60;
-            break;
+            return CellState.BLACK90;
         case 10:
-        case 11:
-            globalGrid[y][x] = CellState.BLACK70;
-            break;
-        case 12:
-        case 13:
-            globalGrid[y][x] = CellState.BLACK80;
-            break;
-        case 14:
-            globalGrid[y][x] = CellState.BLACK90;
-            break;
-        case 15:
-            globalGrid[y][x] = CellState.BLACK;
-            break;
-        default:
-            globalGrid[y][x] = CellState.WHITE;
-            break;
+            return CellState.BLACK;
+    }
+}
+
+// Draw the line between (x0, y0) and (x1, y1) with anti-aliasing
+function rasterizeAntiAliasedLine() {
+    let x0 = originPoint[0];
+    let y0 = originPoint[1];
+    let x1 = anchorPoint[0];
+    let y1 = anchorPoint[1];
+
+    let steep = Math.abs(y1 - y0) > Math.abs(x1 - x0);
+
+    if (steep) {
+        // Swap x and y
+        [x0, y0] = [y0, x0];
+        [x1, y1] = [y1, x1];
     }
 
-    return;
+    if (x0 > x1) {
+        // Swap start and end points
+        [x0, x1] = [x1, x0];
+        [y0, y1] = [y1, y0];
+    }
+
+    const dx = x1 - x0;
+    const dy = y1 - y0;
+    const gradient = (dx === 0) ? 1 : dy / dx;
+
+    // Handle first endpoint
+    const xend = round(x0);
+    const yend = y0 + gradient * (xend - x0);
+    const xgap = rfpart(x0 + 0.5);
+    const xpxl1 = xend;
+    const ypxl1 = ipart(yend);
+
+    if (steep) {
+        console.log(ypxl1, xpxl1, rfpart(yend), xgap)
+        globalGrid[ypxl1][xpxl1] = val_to_cellstate(rfpart(yend) * xgap);
+        globalGrid[ypxl1 + 1][xpxl1] = val_to_cellstate(fpart(yend) * xgap);
+    } else {
+        console.log(xpxl1, ypxl1, rfpart(yend), xgap)
+        globalGrid[xpxl1][ypxl1] = val_to_cellstate(rfpart(yend) * xgap);
+        globalGrid[xpxl1][ypxl1 + 1] = val_to_cellstate(fpart(yend) * xgap);
+    }
+
+    let intery = yend + gradient; // First y-intersection for the main loop
+
+    // Handle second endpoint
+    const xend2 = round(x1);
+    const yend2 = y1 + gradient * (xend2 - x1);
+    const xgap2 = fpart(x1 + 0.5);
+    const xpxl2 = xend2;
+    const ypxl2 = ipart(yend2);
+
+    if (steep) {
+        globalGrid[ypxl2][xpxl2] = val_to_cellstate(rfpart(yend2) * xgap2);
+        globalGrid[ypxl2 + 1][xpxl2] = val_to_cellstate(fpart(yend2) * xgap2);
+    } else {
+        globalGrid[xpxl2][ypxl2] = val_to_cellstate(rfpart(yend2) * xgap2);
+        globalGrid[xpxl2][ypxl2 + 1] = val_to_cellstate(fpart(yend2) * xgap2);
+    }
+
+    // Main loop
+    if (steep) {
+        for (let x = xpxl1 + 1; x < xpxl2; x++) {
+            globalGrid[ipart(intery)][x] = val_to_cellstate(rfpart(intery));
+            globalGrid[ipart(intery) + 1][x] = val_to_cellstate(fpart(intery));
+            intery += gradient;
+        }
+    } else {
+        for (let x = xpxl1 + 1; x < xpxl2; x++) {
+            globalGrid[x][ipart(intery)] = val_to_cellstate(rfpart(intery));
+            globalGrid[x][ipart(intery) + 1] = val_to_cellstate(fpart(intery));
+            intery += gradient;
+        }
+    }
+
+    // make origin and anchor black
+    globalGrid[originPoint[0]][originPoint[1]] = CellState.BLACK;
+    globalGrid[anchorPoint[0]][anchorPoint[1]] = CellState.BLACK;
 }
 
 var midPointCircle = function () {
